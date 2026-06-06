@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AppointmentResultController;
+use App\Http\Controllers\LabResultController;
 
 // ------------------------------
 // Public Landing Page
@@ -104,3 +105,12 @@ Route::get('/patient/results', [AppointmentResultController::class, 'patientResu
 // Patient: download/view PDF
 Route::get('/patient/result/download/{id}', [AppointmentResultController::class, 'download'])
     ->name('patient.result.download');
+
+    // Standalone blank builder (no appointment pre-filled)
+Route::get('/admin/lab-result/create', [LabResultController::class, 'create'])
+    ->name('admin.lab-result.create');
+ 
+// Builder pre-filled from a specific appointment
+// Link to this from your uploadResult blade "Upload File" button
+Route::get('/admin/lab-result/{appointment}', [LabResultController::class, 'builder'])
+    ->name('admin.lab-result.builder');
