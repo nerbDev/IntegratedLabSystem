@@ -51,7 +51,7 @@ class AccountController extends Controller
 
     // ------------------------------
     // Register
-    // ---------------  ---------------
+    // ------------------------------
     public function register(Request $request)
     {
         $request->validate([
@@ -69,7 +69,6 @@ class AccountController extends Controller
             'contact_person' => 'required|string|max:255',
             'contact_number' => 'required|string|max:20',
             'password' => 'required|string|min:6|confirmed',
-
         ]);
 
         $user = UserAccount::create([
@@ -132,5 +131,55 @@ class AccountController extends Controller
     public function patientDashboard()
     {
         return view('patientdashboard');
+    }
+
+    // ------------------------------------------------------------
+    // Admin User Accounts Management Methods
+    // ------------------------------------------------------------
+
+    // Render list of accounts using ASuseraccounts view located in resources/views/
+    public function adminUserAccountsIndex()
+    {
+        // Fetch all accounts from your custom useraccount table model
+        $users = UserAccount::orderBy('created_at', 'desc')->get();
+        return view('ASuseraccounts', compact('users'));
+    }
+
+    // Update account profile administrative values
+    public function adminUserAccountsUpdate(Request $request, $id)
+    {
+        $user = UserAccount::findOrFail($id);
+
+        $validated = $request->validate([
+            'first_name'     => 'required|string|max:255',
+            'middle_name'    => 'nullable|string|max:255',
+            'last_name'      => 'required|string|max:255',
+            'role'           => 'required|in:patient,staff,admin',
+            'email'          => 'required|email|unique:useraccount,email,' . $id,
+            'phone_number'   => 'required|string|max:20',
+            'Umunicipality'  => 'required|string|max:255',
+            'Ubarangay'      => 'required|string|max:255',
+            'Ustreet_house'  => 'required|string|max:255',
+            'contact_person' => 'required|string|max:255',
+            'contact_number' => 'required|string|max:20',
+        ]);
+
+        $user->update($validated);
+
+        return redirect()->back()->with('success', 'User profile details successfully modified.');
+    }
+
+    // Delete account profile
+    public function adminUserAccountsDestroy($id)
+    {
+        // Don't let an admin delete their own current profile session
+        if (Auth::id() == $id) {
+            return redirect()->back()->with('error', 'You are not allowed to delete your current administrator session.');
+        }
+
+        $user = UserAccount::findOrFail($id);
+        $user->delete();
+
+        return redirect()->back()->with('success', 'User account permanently scrubbed from system registry.');
     }
 }

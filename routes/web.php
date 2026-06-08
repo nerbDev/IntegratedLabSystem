@@ -5,6 +5,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AppointmentResultController;
 use App\Http\Controllers\LabResultController;
+use App\Http\Controllers\PatientController;
 
 // ------------------------------
 // Public Landing Page
@@ -114,3 +115,20 @@ Route::get('/admin/lab-result/create', [LabResultController::class, 'create'])
 // Link to this from your uploadResult blade "Upload File" button
 Route::get('/admin/lab-result/{appointment}', [LabResultController::class, 'builder'])
     ->name('admin.lab-result.builder');
+
+// Protects the group using your parameterized RoleMiddleware
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // User Account Directory Management Panel Routes
+    Route::get('/user-accounts', [AccountController::class, 'adminUserAccountsIndex'])->name('users.index');
+   Route::put('/user-accounts/{id}', [AccountController::class, 'adminUserAccountsUpdate'])->name('users.update');
+    Route::delete('/user-accounts/{id}', [AccountController::class, 'adminUserAccountsDestroy'])->name('users.destroy');
+});
+
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Patient Management Directorial Core Systems Maps
+    Route::get('/patient-details', [PatientController::class, 'index'])->name('patients.index');
+    Route::get('/patient-details/{id}', [PatientController::class, 'show'])->name('patients.show');
+    Route::put('/patient-details/{id}', [PatientController::class, 'update'])->name('patients.update');
+    Route::delete('/patient-details/{id}', [PatientController::class, 'destroy'])->name('patients.destroy');
+});

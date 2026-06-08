@@ -12,7 +12,7 @@
 .lrb-shell {
     padding: 28px 10px;
     font-family: 'Inter', system-ui, sans-serif;
-    background: transparent; /* let adminlayout bg show */
+    background: transparent;
 }
 
 /* ── Top bar ─────────────────────────────────────────────── */
@@ -227,15 +227,65 @@
 
 /* ── Print styles ────────────────────────────────────────── */
 @media print {
-    .lrb-panel, .lrb-topbar, .lrb-paper-wrapper { display: none !important; }
-    .lrb-grid { display: block !important; }
-    .lrb-paper {
-        box-shadow: none !important; border-radius: 0 !important;
-        max-width: 100% !important; padding: 20px !important;
-        display: block !important;
+
+    /* 1. Reset html/body so the admin layout's dark background doesn't show */
+    html, body {
+        background: #fff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+
+    /* 2. Hide EVERYTHING on the page by default */
+    body * {
+        visibility: hidden !important;
+    }
+
+    /* 3. Show ONLY the paper and everything inside it */
+    #lrbPaper,
+    #lrbPaper * {
+        visibility: visible !important;
+    }
+
+    /* 4. Position the paper to fill the page from the top-left */
+    #lrbPaper {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 20px 28px !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        background: #fff !important;
+        z-index: 9999 !important;
+    }
+
+    /* 5. Make result inputs look like plain text (not editable fields) */
+    .lrb-result-input {
+        border-bottom: 1px solid #bbb !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* 6. Preserve background colors for colored elements */
+    .lrb-title-banner,
+    .lrb-section-title,
+    .lrb-table th,
+    .lrb-table tr:nth-child(even) td,
+    .lrb-info-grid,
+    .lrb-remarks,
+    .lrb-logo-icon {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* 7. Prevent awkward page breaks inside table rows and sections */
+    .lrb-section-wrap { page-break-inside: avoid; }
+    .lrb-table tr      { page-break-inside: avoid; }
+    .lrb-sigs          { page-break-inside: avoid; }
 }
 </style>
 
@@ -390,7 +440,6 @@
                             </div>
                             <div>
                                 <div class="lrb-lab-name">Subic Med Health Laboratory</div>
-                                
                                 <div class="lrb-lab-contact">
                                     14-A National Highway Mangan-Vaca, Subic, Philippines
                                 </div>
