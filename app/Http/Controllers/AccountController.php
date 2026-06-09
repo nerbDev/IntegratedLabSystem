@@ -133,4 +133,70 @@ class AccountController extends Controller
     {
         return view('patientdashboard');
     }
+
+    // ------------------------------
+    // Patient Account Settings
+    // ------------------------------
+    public function showSettings()
+    {
+        return view('accountsettings');
+    }
+
+    public function updateSettings(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|email|unique:useraccount,email,' . $user->id,
+            'phone' => 'nullable|string|max:20',
+        ]);
+
+        UserAccount::where('id', $user->id)->update([
+            'first_name' => $request->first_name,
+            'middle_name' => $request->middle_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'phone_number' => $request->phone,
+        ]);
+
+        return back()->with('success', 'Profile updated successfully!');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:6|confirmed',
+        ]);
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->with('error', 'Current password is incorrect!');
+        }
+
+        UserAccount::where('id', $user->id)->update([
+            'password' => Hash::make($request->new_password),
+        ]);
+
+        return back()->with('success', 'Password changed successfully!');
+    }
+
+
+    // ------------------------------
+    // Staff: Manage Accounts
+    // ------------------------------
+    
+   public function manageAccounts()
+{
+    $accounts = UserAccount::where('role', 'patient')->orderBy('created_at', 'desc')->get();
+    $totalPatients = $accounts->count();
+
+    return view('manageaccounts', compact('accounts', 'totalPatients'));
+}
+
+
 }

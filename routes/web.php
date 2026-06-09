@@ -34,12 +34,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/staffdashboard', function () {
             return view('staffdashboard');
         })->name('staffdashboard');
+        Route::get('/staff/manage-accounts', [AccountController::class, 'manageAccounts'])->name('staff.manageaccounts');
     });
 
     Route::middleware(['role:patient'])->group(function () {
         Route::get('/patientdashboard', function () {
             return view('patientdashboard');
         })->name('patientdashboard');
+        Route::get('/patient/settings', [AccountController::class, 'showSettings'])->name('patient.settings');
+        Route::put('/patient/settings/update', [AccountController::class, 'updateSettings'])->name('patient.settings.update');
+        Route::put('/patient/settings/password', [AccountController::class, 'updatePassword'])->name('patient.settings.password');
     });
 
 });

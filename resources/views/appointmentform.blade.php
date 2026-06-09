@@ -372,8 +372,9 @@
             "Mangan-Vaca": ["St. Joseph St.", "San Roque St.", "Mangan-Vaca Road"],
             "Sto. Tomas": ["Purok 6", "Green Valley", "Sto. Tomas Proper"],
             "Cawag": ["Sitio Nagtulong", "Agusuhin Relocation", "upper matang-ib", "lower matang-ib", "nagyantok", "rough-road", "cawag proper", "cawag resettlement", "malingaw"],
-            "San Isidro": ["Purok 1", "Purok 2", "Purok 3", "Purok 4"],
-            "Ilwas" : ["Nara", "mahogany"]
+            "San Isidro": ["Purok 1", "Purok 2", "Purok 3", "Purok 4", "Purok 5"],
+            "Ilwas" : ["Nara", "mahogany"],
+            
         },
         "Olongapo": {
             "Barretto": ["Baloy Long Beach", "Sierra Beach", "Rizal St."],

@@ -195,7 +195,7 @@
       <i class="bi bi-file-earmark-check"></i> Laboratory Results
     </a>
     
-    <a href="#"><i class="bi bi-person-gear"></i> Account Settings</a>
+    <a href="{{ route('patient.settings') }}"><i class="bi bi-person-gear"></i> Account Settings</a>
   </div>
 
   <div class="content-area">

@@ -141,7 +141,7 @@
         <a href="{{ route('staffdashboard') }}" class="{{ request()->routeIs('staffdashboard') ? 'active' : '' }}">
           <i class="bi bi-speedometer2 me-2"></i> Overview
         </a>
-        <a href="{{ route('requests') }}" class="{{ request()->routeIs('requests') ? 'active' : '' }}">
+        <a href="{{ route('appointments.requests') }}" class="{{ request()->routeIs('requests') ? 'active' : '' }}">
           <i class="bi bi-envelope me-2"></i> Appointment Requests
         </a>
       @else
