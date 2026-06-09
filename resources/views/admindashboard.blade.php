@@ -231,11 +231,10 @@
       </a>
       <a href="#"><i class="bi bi-clock-history"></i> Activity Logs</a>
       <a href="#"><i class="bi bi-archive"></i> Archived Records</a>
-      <a href="{{ route('admin.uploadResults') }}">
-        <i class="bi bi-journal-text"></i> Upload Results
-      </a>
-      <a href="#"><i class="bi bi-people"></i> Patient Info</a>
-      <a href="#"><i class="bi bi-person-badge"></i> User Accounts</a>
+    <a href="{{ route('admin.patients.index') }}" class="nav-link {{ Request::routeIs('admin.patients.index') ? 'active' : '' }}"> <i class="bi bi-person-badge"></i> Patients</a>
+    <a href="{{ route('admin.uploadResults') }}"><i class="bi bi-cloud-upload me-2"></i> Upload Results</a>
+    <a href="{{ route('admin.lab-result.create') }}"><i class="bi bi-journal-plus me-2"></i> Create Result</a>
+      <a href="{{ route('admin.users.index') }}"><i class="bi bi-person-badge"></i> User Accounts</a>
     </div>
 
     <div class="content-area">

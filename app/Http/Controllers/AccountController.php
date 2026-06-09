@@ -51,7 +51,7 @@ class AccountController extends Controller
 
     // ------------------------------
     // Register
-    // ---------------  ---------------
+    // ------------------------------
     public function register(Request $request)
     {
         $request->validate([
@@ -69,7 +69,6 @@ class AccountController extends Controller
             'contact_person' => 'required|string|max:255',
             'contact_number' => 'required|string|max:20',
             'password' => 'required|string|min:6|confirmed',
-
         ]);
 
         $user = UserAccount::create([

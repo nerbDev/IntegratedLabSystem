@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class UserAccount extends Authenticatable
 {
@@ -52,7 +53,7 @@ class UserAccount extends Authenticatable
      */
     public function getFullNameAttribute()
     {
-        return "{$this->first_name} {$this->middle_name} {$this->last_name}";
+        return trim("{$this->first_name} {$this->middle_name} {$this->last_name}");
     }
 
     /**
@@ -77,5 +78,16 @@ class UserAccount extends Authenticatable
     public function isAdmin()
     {
         return $this->role === 'admin';
+    }
+
+    /**
+     * Dynamic relationship mapping linking user accounts to lab appointments history table.
+     * Maps useraccount.id to your appointments table patient_id field.
+     */
+    public function appointments(): HasMany
+    {
+        // Eloquent looks up the default App\Models\Appointment namespace mapping. 
+        // Swap out '\App\Models\Appointment' string if your appointment model uses a different name!
+        return $this->hasMany('\App\Models\Appointment', 'patient_id', 'id');
     }
 }
