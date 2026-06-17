@@ -133,53 +133,69 @@ class AccountController extends Controller
         return view('patientdashboard');
     }
 
-    // ------------------------------------------------------------
-    // Admin User Accounts Management Methods
-    // ------------------------------------------------------------
-
-    // Render list of accounts using ASuseraccounts view located in resources/views/
-    public function adminUserAccountsIndex()
+    // ------------------------------
+    // Patient Account Settings
+    // ------------------------------
+    public function showSettings()
     {
-        // Fetch all accounts from your custom useraccount table model
-        $users = UserAccount::orderBy('created_at', 'desc')->get();
-        return view('ASuseraccounts', compact('users'));
+        return view('accountsettings');
     }
 
-    // Update account profile administrative values
-    public function adminUserAccountsUpdate(Request $request, $id)
+    public function updateSettings(Request $request)
     {
-        $user = UserAccount::findOrFail($id);
+        $user = Auth::user();
 
-        $validated = $request->validate([
-            'first_name'     => 'required|string|max:255',
-            'middle_name'    => 'nullable|string|max:255',
-            'last_name'      => 'required|string|max:255',
-            'role'           => 'required|in:patient,staff,admin',
-            'email'          => 'required|email|unique:useraccount,email,' . $id,
-            'phone_number'   => 'required|string|max:20',
-            'Umunicipality'  => 'required|string|max:255',
-            'Ubarangay'      => 'required|string|max:255',
-            'Ustreet_house'  => 'required|string|max:255',
-            'contact_person' => 'required|string|max:255',
-            'contact_number' => 'required|string|max:20',
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|email|unique:useraccount,email,' . $user->id,
+            'phone' => 'nullable|string|max:20',
         ]);
 
-        $user->update($validated);
+        UserAccount::where('id', $user->id)->update([
+            'first_name' => $request->first_name,
+            'middle_name' => $request->middle_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'phone_number' => $request->phone,
+        ]);
 
-        return redirect()->back()->with('success', 'User profile details successfully modified.');
+        return back()->with('success', 'Profile updated successfully!');
     }
 
-    // Delete account profile
-    public function adminUserAccountsDestroy($id)
+    public function updatePassword(Request $request)
     {
-        // Don't let an admin delete their own current profile session
-        if (Auth::id() == $id) {
-            return redirect()->back()->with('error', 'You are not allowed to delete your current administrator session.');
+        $user = Auth::user();
+
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:6|confirmed',
+        ]);
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->with('error', 'Current password is incorrect!');
         }
 
-        $user = UserAccount::findOrFail($id);
-        $user->delete();
+        UserAccount::where('id', $user->id)->update([
+            'password' => Hash::make($request->new_password),
+        ]);
 
-        return redirect()->back()->with('success', 'User account permanently scrubbed from system registry.');
+        return back()->with('success', 'Password changed successfully!');
     }
+
+
+    // ------------------------------
+    // Staff: Manage Accounts
+    // ------------------------------
+    
+   public function manageAccounts()
+{
+    $accounts = UserAccount::where('role', 'patient')->orderBy('created_at', 'desc')->get();
+    $totalPatients = $accounts->count();
+
+    return view('manageaccounts', compact('accounts', 'totalPatients'));
+}
+
+
 }
