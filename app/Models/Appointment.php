@@ -36,8 +36,14 @@ class Appointment extends Model
         'appointment_time' => 'string',
     ];
 
-    // Relationship to UserAccount
+    // Relationship to UserAccount (Kept original unchanged)
     public function user()
+    {
+        return $this->belongsTo(UserAccount::class, 'patient_id', 'id');
+    }
+
+    // Alias relationship added specifically for the Weekly Report Generator
+    public function userAccount()
     {
         return $this->belongsTo(UserAccount::class, 'patient_id', 'id');
     }

@@ -222,9 +222,9 @@
       <a href="#">
         <i class="bi bi-calendar-check"></i> Appointment Schedule
       </a>
-      <a href="{{ route('requests') }}" class="{{ request()->routeIs('staff.requests') ? 'active' : '' }}">
-        <i class="bi bi-envelope"></i> Appointment Requests
-      </a>
+    <a href="{{ route('appointments.requests') }}" class="{{ request()->routeIs('appointments.requests') ? 'active' : '' }}">
+      <i class="bi bi-envelope"></i> Appointment Requests
+    </a>
       <a href="#"><i class="bi bi-person-badge"></i> Manage Accounts</a>
     </div>
 

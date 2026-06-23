@@ -6,6 +6,7 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AppointmentResultController;
 use App\Http\Controllers\LabResultController;
 use App\Http\Controllers\PatientController;
+use App\Http\Controllers\ReportController;
 
 // ------------------------------
 // Public Landing Page
@@ -132,3 +133,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/patient-details/{id}', [PatientController::class, 'update'])->name('patients.update');
     Route::delete('/patient-details/{id}', [PatientController::class, 'destroy'])->name('patients.destroy');
 });
+
+Route::get('/admin/reports/weekly', [ReportController::class, 'index'])
+    ->name('reports.weekly');

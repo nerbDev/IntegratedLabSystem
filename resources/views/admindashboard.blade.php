@@ -225,7 +225,9 @@
   <div class="main-content">
     <div class="sidebar" id="sidebar">
       <h3>Menu</h3>
-      <a href="#"><i class="bi bi-file-earmark-text"></i> System Reports</a>
+      <a href="{{ route('reports.weekly') }}" class="nav-link">
+    <i class="bi bi-clipboard2-pulse me-2"></i> Weekly Reports
+</a>
       <a href="{{ route('admin.appointments.index') }}">
           <i class="bi bi-calendar-event"></i> Appointments 
       </a>
@@ -235,6 +237,7 @@
     <a href="{{ route('admin.uploadResults') }}"><i class="bi bi-cloud-upload me-2"></i> Upload Results</a>
     <a href="{{ route('admin.lab-result.create') }}"><i class="bi bi-journal-plus me-2"></i> Create Result</a>
       <a href="{{ route('admin.users.index') }}"><i class="bi bi-person-badge"></i> User Accounts</a>
+
     </div>
 
     <div class="content-area">
