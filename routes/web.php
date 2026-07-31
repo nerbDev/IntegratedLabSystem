@@ -7,6 +7,10 @@ use App\Http\Controllers\AppointmentResultController;
 use App\Http\Controllers\LabResultController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\ArchiveController;
 
 // ------------------------------
 // Public Landing Page
@@ -24,6 +28,18 @@ Route::post('/login', [AccountController::class, 'login'])->name('login.submit')
 Route::post('/register', [AccountController::class, 'register'])->name('register.submit');
 
 
+//google account redirect
+Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])
+    ->name('social.redirect')
+    ->whereIn('provider', ['google', 'facebook']);
+
+Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])
+    ->whereIn('provider', ['google', 'facebook']);
+
+Route::get('/complete-profile', [SocialAuthController::class, 'showCompleteProfile'])
+    ->middleware('auth')->name('profile.complete');
+Route::post('/complete-profile', [SocialAuthController::class, 'completeProfile'])
+    ->middleware('auth')->name('profile.complete.submit');
 // ------------------------------
 // Protected Routes (Dashboards)
 // ------------------------------
@@ -136,3 +152,30 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
 Route::get('/admin/reports/weekly', [ReportController::class, 'index'])
     ->name('reports.weekly');
+
+//for the admin the view activity logs
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('admin.activityLogs.index');
+});
+
+
+//for the admin to view activitylogs\timeline
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/appointments/{id}/timeline', [AppointmentController::class, 'timeline'])
+        ->name('admin.appointments.timeline');
+});
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/profile', [AdminProfileController::class, 'show'])->name('admin.profile.show');
+    Route::put('/admin/profile', [AdminProfileController::class, 'update'])->name('admin.profile.update');
+    Route::put('/admin/profile/password', [AdminProfileController::class, 'updatePassword'])->name('admin.profile.password');
+});
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/archive', [ArchiveController::class, 'index'])->name('admin.archive.index');
+});
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/archive', [ArchiveController::class, 'index'])->name('admin.archive.index');
+    Route::get('/admin/archive/{id}/download', [ArchiveController::class, 'download'])->name('admin.archive.download');
+});

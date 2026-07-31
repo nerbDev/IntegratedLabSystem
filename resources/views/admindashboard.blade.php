@@ -212,7 +212,7 @@
     <div class="profile-dropdown">
       <span>Welcome, Admin 🛠️ <i class="bi bi-caret-down-fill"></i></span>
       <div class="profile-dropdown-content">
-        <a href="#">Profile</a>
+        <a href="{{ route('admin.profile.show') }}">Profile</a>
         <a href="#">Settings</a>
         <form action="{{ route('logout') }}" method="POST">
           @csrf
@@ -230,9 +230,12 @@
 </a>
       <a href="{{ route('admin.appointments.index') }}">
           <i class="bi bi-calendar-event"></i> Appointments 
-      </a>
-      <a href="#"><i class="bi bi-clock-history"></i> Activity Logs</a>
-      <a href="#"><i class="bi bi-archive"></i> Archived Records</a>
+</a>
+<a href="{{ route('admin.activityLogs.index') }}" 
+   class="{{ request()->routeIs('activityLogs.index') ? 'active' : '' }}">
+   <i class="bi bi-clock-history"></i> Activity Logs
+</a>
+    <a href="{{ route('admin.archive.index') }}"><i class="bi bi-archive-fill"></i> Archive Records</a>
     <a href="{{ route('admin.patients.index') }}" class="nav-link {{ Request::routeIs('admin.patients.index') ? 'active' : '' }}"> <i class="bi bi-person-badge"></i> Patients</a>
     <a href="{{ route('admin.uploadResults') }}"><i class="bi bi-cloud-upload me-2"></i> Upload Results</a>
     <a href="{{ route('admin.lab-result.create') }}"><i class="bi bi-journal-plus me-2"></i> Create Result</a>

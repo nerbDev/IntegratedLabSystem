@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\UserAccount;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Socialite\Facades\Socialite;
 
 class AccountController extends Controller
 {
@@ -28,6 +29,12 @@ class AccountController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
+
+        $existing = UserAccount::where('email', $credentials['email'])->first();
+
+        if ($existing && is_null($existing->password)) {
+            return back()->with('error', 'This account uses Google/Facebook sign-in. Please use that button instead.');
+        }
 
         if (Auth::attempt($credentials)) {
             return $this->redirectByRole(Auth::user());
@@ -93,6 +100,134 @@ class AccountController extends Controller
 
         return $this->redirectByRole($user)
             ->with('success', 'Account created and logged in successfully.');
+    }
+
+    // ------------------------------------------------------------
+    // Social Login (Google / Facebook) — direct sign-in/sign-up
+    // ------------------------------------------------------------
+
+    public function redirectToProvider(string $provider)
+    {
+        if (!in_array($provider, ['google', 'facebook'])) {
+            abort(404);
+        }
+
+        return Socialite::driver($provider)->redirect();
+    }
+
+    public function handleProviderCallback(string $provider)
+    {
+        if (!in_array($provider, ['google', 'facebook'])) {
+            abort(404);
+        }
+
+        $socialUser = Socialite::driver($provider)->user();
+        $email = $socialUser->getEmail();
+
+        if (!$email) {
+            // Facebook can withhold email if the user declines to share it.
+            // We require an email to create/match a patient record.
+            return redirect()->route('welcome')
+                ->with('error', 'Your account did not share an email. Please try again or register manually.');
+        }
+
+        // already linked to this provider?
+        $user = UserAccount::where('oauth_provider', $provider)
+            ->where('oauth_uid', $socialUser->getId())
+            ->first();
+
+        if (!$user) {
+            // existing manual/email account with the same address → link it
+            $user = UserAccount::where('email', $email)->first();
+
+            if ($user) {
+                $user->update([
+                    'oauth_provider' => $provider,
+                    'oauth_uid' => $socialUser->getId(),
+                ]);
+            } else {
+                [$firstName, $middleName, $lastName] = $this->splitName($socialUser->getName() ?? $email);
+
+                // role is always hardcoded to 'patient' here — never derived
+                // from anything the client sends, since role gates access
+                // (admin/staff accounts are not created via social login)
+                $user = UserAccount::create([
+                    'role' => 'patient',
+                    'first_name' => $firstName,
+                    'middle_name' => $middleName,
+                    'last_name' => $lastName,
+                    'email' => $email,
+                    'oauth_provider' => $provider,
+                    'oauth_uid' => $socialUser->getId(),
+                ]);
+            }
+        }
+
+        Auth::login($user);
+
+        if (!$this->profileIsComplete($user)) {
+            return redirect()->route('profile.complete')
+                ->with('success', 'Signed in! Please finish setting up your profile.');
+        }
+
+        return $this->redirectByRole($user);
+    }
+
+    private function splitName(string $fullName): array
+    {
+        $parts = preg_split('/\s+/', trim($fullName)) ?: [''];
+        $first = $parts[0] ?? '';
+        $last = count($parts) > 1 ? array_pop($parts) : '';
+        $middle = count($parts) > 1 ? implode(' ', array_slice($parts, 1)) : '';
+        return [$first, $middle, $last];
+    }
+
+    public function profileIsComplete(UserAccount $user): bool
+    {
+        return !empty($user->date_of_birth)
+            && !empty($user->sex)
+            && !empty($user->phone_number)
+            && !empty($user->Umunicipality)
+            && !empty($user->Ubarangay)
+            && !empty($user->Ustreet_house)
+            && !empty($user->contact_person)
+            && !empty($user->contact_number);
+    }
+
+    // ------------------------------------------------------------
+    // Complete Profile (for accounts created via Google/Facebook)
+    // ------------------------------------------------------------
+
+    public function showCompleteProfile()
+    {
+        $user = Auth::user();
+
+        if ($this->profileIsComplete($user)) {
+            return $this->redirectByRole($user);
+        }
+
+        return view('complete-profile', compact('user'));
+    }
+
+    public function completeProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'date_of_birth' => 'required|date',
+            'sex' => 'required|in:male,female',
+            'phone_number' => 'required|string|max:20',
+            'Umunicipality' => 'required|string|max:255',
+            'Ubarangay' => 'required|string|max:255',
+            'Ustreet_house' => 'required|string|max:255',
+            'contact_person' => 'required|string|max:255',
+            'contact_number' => 'required|string|max:20',
+        ]);
+
+        $user->update($validated);
+
+        return $this->redirectByRole($user)
+            ->with('success', 'Profile completed successfully.');
     }
 
     // ------------------------------

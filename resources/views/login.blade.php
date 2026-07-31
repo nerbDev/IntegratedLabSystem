@@ -81,6 +81,38 @@
         margin-bottom: 5px;
         font-size: 0.9rem;
     }
+
+    .social-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.7);
+      margin: 16px 0;
+      font-size: 0.85rem;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      flex: 1;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+    }
+
+    .divider:not(:empty)::before {
+      margin-right: .75em;
+    }
+
+    .divider:not(:empty)::after {
+      margin-left: .75em;
+    }
   </style>
 </head>
 
@@ -109,6 +141,18 @@
           <div class="alert alert-danger py-2">{{ session('login_error') }}</div>
         @endif
 
+        {{-- Direct Facebook / Google sign-in --}}
+        <div class="d-grid gap-2 mb-2">
+          <a href="{{ route('social.redirect', 'google') }}" class="btn btn-light social-btn">
+            <i class="bi bi-google"></i> Continue with Google
+          </a>
+          <a href="{{ route('social.redirect', 'facebook') }}" class="btn btn-primary social-btn">
+            <i class="bi bi-facebook"></i> Continue with Facebook
+          </a>
+        </div>
+
+        <div class="divider">already have one ?</div>
+
         <form action="{{ route('login.submit') }}" method="POST">
           @csrf
           <div class="mb-3">
@@ -125,7 +169,19 @@
 
       <div id="registerForm" style="display: none;">
         <h4 class="text-center mb-4">Create Account</h4>
-        
+
+        {{-- Direct Facebook / Google sign-up --}}
+        <div class="d-grid gap-2 mb-2">
+          <a href="{{ route('social.redirect', 'google') }}" class="btn btn-light social-btn">
+            <i class="bi bi-google"></i> Sign up with Google
+          </a>
+          <a href="{{ route('social.redirect', 'facebook') }}" class="btn btn-primary social-btn">
+            <i class="bi bi-facebook"></i> Sign up with Facebook
+          </a>
+        </div>
+
+        <div class="divider">or create an account</div>
+
         @if($errors->any())
           <div class="alert alert-danger py-2">
             <ul class="mb-0 small">

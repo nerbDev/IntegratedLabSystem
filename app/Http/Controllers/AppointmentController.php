@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Appointment; 
 use App\Models\UserAccount; 
+use App\Services\ActivityLogger;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\ActivityLog;
 
 class AppointmentController extends Controller
 {
@@ -52,7 +54,7 @@ class AppointmentController extends Controller
 
         $formattedTime = Carbon::parse($request->appointment_time)->format('H:i:s');
 
-        Appointment::create([
+        $appointment = Appointment::create([
             'patient_id'       => Auth::id(), 
             'service'          => $request->service, 
             'appointment_type' => $request->appointment_type,
@@ -70,6 +72,15 @@ class AppointmentController extends Controller
             'landmark'         => $request->landmark,
             'status'           => 'pending',
         ]);
+
+        // Log the booking
+        ActivityLogger::log(
+            module: 'Appointments',
+            action: 'Create',
+            description: "Patient booked appointment #{$appointment->id} ({$appointment->service}) for {$appointment->first_name} {$appointment->last_name}",
+            new: $appointment->toArray(),
+            referenceId: $appointment->id   // ✅ matches $referenceId in the method signature
+        );
 
         return redirect()->back()->with('success', 'Appointment booked successfully!');
     }
@@ -114,6 +125,8 @@ class AppointmentController extends Controller
     public function update(Request $request, $id)
     {
         $appointment = Appointment::findOrFail($id);
+        $oldStatus = $appointment->status;
+        $oldData = $appointment->only(['appointment_date', 'appointment_time', 'status', 'notes']);
 
         // Date and Time are marked 'sometimes' so the Modal (which doesn't have them) doesn't fail validation
         $request->validate([
@@ -136,6 +149,21 @@ class AppointmentController extends Controller
             'status'           => $request->status,
             'notes'            => $request->notes,
         ]);
+
+        // Log the status/detail change
+        ActivityLogger::log(
+            module: 'Appointments',
+            action: 'Update',
+            description: "{$this->actorRole()} changed appointment #{$appointment->id} ({$appointment->first_name} {$appointment->last_name}) status from {$oldStatus} to {$request->status}",
+            old: $oldData,
+            new: $appointment->only(['appointment_date', 'appointment_time', 'status', 'notes']),
+            referenceId: $appointment->id
+        );
+
+        // Notify patient only when status actually changed to one of these three
+        if ($oldStatus !== $request->status && in_array($request->status, ['approved', 'cancelled', 'rescheduled'])) {
+            $appointment->user->notify(new \App\Notifications\AppointmentStatusUpdated($appointment));
+        }
 
         // OBJECTIVE: If status is 'completed', transfer the admin to the results/upload blade
         if ($request->status === 'completed') {
@@ -165,5 +193,26 @@ class AppointmentController extends Controller
 
         // Return the Admin version with the two separate lists
         return view('ASpendingrequests', compact('activeAppointments', 'completedAppointments'));
+    }
+
+        public function timeline($id)
+    {
+        $appointment = Appointment::with('user')->findOrFail($id);
+
+        $logs = ActivityLog::where('reference_id', $id)
+                    ->orderBy('created_at', 'asc')
+                    ->get();
+
+        return view('activity-log.timeline', compact('appointment', 'logs'));
+    }
+
+    /**
+     * Small helper to describe who performed the action in log messages
+     * (Staff approving vs Admin completing use the same update() method)
+     */
+    private function actorRole()
+    {
+        $role = Auth::user()->role ?? 'User';
+        return ucfirst($role);
     }
 }

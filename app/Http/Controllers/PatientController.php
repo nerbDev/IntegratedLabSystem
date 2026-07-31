@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\UserAccount;
+use App\Services\ActivityLogger;
 use Illuminate\Support\Facades\Auth;
 
 class PatientController extends Controller
@@ -28,6 +29,14 @@ class PatientController extends Controller
                   ->orderBy('appointment_time', 'desc');
         }])->findOrFail($id);
 
+        // Log that admin viewed this patient's record
+        ActivityLogger::log(
+            module: 'Patients',
+            action: 'View',
+            description: "Admin viewed patient record for {$patient->first_name} {$patient->last_name}",
+            reference_id: $patient->id
+        );
+
         return response()->json([
             'patient'      => $patient,
             'appointments' => $patient->appointments
@@ -38,6 +47,11 @@ class PatientController extends Controller
     public function update(Request $request, $id)
     {
         $patient = UserAccount::findOrFail($id);
+        $oldData = $patient->only([
+            'first_name', 'middle_name', 'last_name', 'date_of_birth', 'sex',
+            'email', 'phone_number', 'Umunicipality', 'Ubarangay', 'Ustreet_house',
+            'contact_person', 'contact_number'
+        ]);
 
         $validated = $request->validate([
             'first_name'     => 'required|string|max:255',
@@ -56,6 +70,16 @@ class PatientController extends Controller
 
         $patient->update($validated);
 
+        // Log the update
+        ActivityLogger::log(
+            module: 'Patients',
+            action: 'Update',
+            description: "Admin updated patient record for {$patient->first_name} {$patient->last_name}",
+            old: $oldData,
+            new: $validated,
+            reference_id: $patient->id
+        );
+
         return redirect()->back()->with('success', 'Patient record metrics successfully customized.');
     }
 
@@ -63,7 +87,18 @@ class PatientController extends Controller
     public function destroy($id)
     {
         $patient = UserAccount::findOrFail($id);
+        $patientData = $patient->only(['id', 'first_name', 'last_name', 'email']);
+
         $patient->delete();
+
+        // Log the deletion — important since this is destructive and irreversible
+        ActivityLogger::log(
+            module: 'Patients',
+            action: 'Delete',
+            description: "Admin deleted patient account for {$patientData['first_name']} {$patientData['last_name']} (ID: {$patientData['id']})",
+            old: $patientData,
+            reference_id: $patientData['id']
+        );
 
         return redirect()->back()->with('success', 'Patient account file permanently dropped from databases.');
     }

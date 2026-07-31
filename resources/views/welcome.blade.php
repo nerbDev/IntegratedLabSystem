@@ -546,38 +546,6 @@
         </div>
       </div>
 
-      <!-- Contact Form -->
-      <div class="col-lg-7 reveal-right">
-        <div style="background:white;border-radius:20px;padding:40px;box-shadow:0 8px 30px rgba(0,0,0,0.08);">
-          <h5 class="fw-bold mb-4" style="color:#1a1a2e;">Send us a message</h5>
-          <div class="contact-form">
-            <div class="row g-3">
-              <div class="col-sm-6">
-                <label class="form-label text-muted small">Full Name</label>
-                <input type="text" class="form-control" placeholder="Juan dela Cruz">
-              </div>
-              <div class="col-sm-6">
-                <label class="form-label text-muted small">Email Address</label>
-                <input type="email" class="form-control" placeholder="juan@email.com">
-              </div>
-              <div class="col-12">
-                <label class="form-label text-muted small">Subject</label>
-                <input type="text" class="form-control" placeholder="Inquiry / Appointment / Feedback">
-              </div>
-              <div class="col-12">
-                <label class="form-label text-muted small">Message</label>
-                <textarea class="form-control" rows="5" placeholder="Write your message here…"></textarea>
-              </div>
-              <div class="col-12 text-end">
-                <button class="btn btn-primary-custom">
-                  <i class="bi bi-send me-2"></i>Send Message
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </section>
 
