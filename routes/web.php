@@ -1,16 +1,18 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AppointmentResultController;
 use App\Http\Controllers\LabResultController;
 use App\Http\Controllers\PatientController;
-use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\ArchiveController;
+use App\Http\Controllers\StaffReportController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SettingsController;
 
 // ------------------------------
 // Public Landing Page
@@ -150,8 +152,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/patient-details/{id}', [PatientController::class, 'destroy'])->name('patients.destroy');
 });
 
-Route::get('/admin/reports/weekly', [ReportController::class, 'index'])
-    ->name('reports.weekly');
 
 //for the admin the view activity logs
 Route::middleware(['auth', 'role:admin'])->group(function () {
@@ -179,3 +179,51 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/archive', [ArchiveController::class, 'index'])->name('admin.archive.index');
     Route::get('/admin/archive/{id}/download', [ArchiveController::class, 'download'])->name('admin.archive.download');
 });
+ 
+// Staff: System Reports
+Route::middleware(['auth', 'role:staff'])->group(function () {
+    Route::get('/staff/reports', [StaffReportController::class, 'index'])
+        ->name('staff.reports.index');
+ 
+    Route::get('/staff/reports/generate', [StaffReportController::class, 'generate'])
+        ->name('staff.reports.generate');
+});
+ 
+// Admin: System Reports
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/reports', [ReportController::class, 'index'])
+        ->name('admin.reports.index');
+ 
+    Route::get('/admin/reports/generate', [ReportController::class, 'generate'])
+        ->name('admin.reports.generate');
+});
+
+Route::get('/staff/appointments/approved', [AppointmentController::class, 'approvedSchedule'])
+    ->name('staff.appointments.approved');
+
+ 
+
+// Add Promo
+Route::get('/staff/settings/promo', [SettingsController::class, 'promoIndex'])->name('staff.settings.promo');
+Route::post('/staff/settings/promo', [SettingsController::class, 'promoStore'])->name('staff.settings.promo.store');
+Route::put('/staff/settings/promo/{package}', [SettingsController::class, 'promoUpdate'])->name('staff.settings.promo.update');
+Route::delete('/staff/settings/promo/{package}', [SettingsController::class, 'promoDestroy'])->name('staff.settings.promo.destroy');
+ 
+// Add Package Type (individual services)
+Route::get('/staff/settings/services', [SettingsController::class, 'serviceIndex'])->name('staff.settings.package');
+Route::post('/staff/settings/services', [SettingsController::class, 'serviceStore'])->name('staff.settings.package.store');
+Route::put('/staff/settings/services/{service}', [SettingsController::class, 'serviceUpdate'])->name('staff.settings.package.update');
+Route::delete('/staff/settings/services/{service}', [SettingsController::class, 'serviceDestroy'])->name('staff.settings.package.destroy');
+ 
+// Modify Price
+Route::get('/staff/settings/price', [SettingsController::class, 'priceIndex'])->name('staff.settings.price');
+Route::put('/staff/settings/price/package/{package}', [SettingsController::class, 'priceUpdatePackage'])->name('staff.settings.price.package');
+Route::put('/staff/settings/price/service/{service}', [SettingsController::class, 'priceUpdateService'])->name('staff.settings.price.service');
+ 
+// Block Unavailable Days
+Route::get('/staff/settings/unavailable', [SettingsController::class, 'unavailableIndex'])->name('staff.settings.unavailable');
+Route::post('/staff/settings/unavailable', [SettingsController::class, 'unavailableStore'])->name('staff.settings.unavailable.store');
+Route::delete('/staff/settings/unavailable/{unavailableDate}', [SettingsController::class, 'unavailableDestroy'])->name('staff.settings.unavailable.destroy');
+ 
+// Public — feeds the patient booking form (no auth needed, it's read-only)
+Route::get('/booking-data', [AppointmentController::class, 'bookingData'])->name('booking.data');

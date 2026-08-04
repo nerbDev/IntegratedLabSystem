@@ -225,11 +225,11 @@
   <div class="main-content">
     <div class="sidebar" id="sidebar">
       <h3>Menu</h3>
-      <a href="{{ route('reports.weekly') }}" class="nav-link">
+      <a href="{{ route('admin.reports.index') }}" class="nav-link">
     <i class="bi bi-clipboard2-pulse me-2"></i> Weekly Reports
 </a>
       <a href="{{ route('admin.appointments.index') }}">
-          <i class="bi bi-calendar-event"></i> Appointments 
+          <i class="bi bi-calendar-event"></i> Pending Requests
 </a>
 <a href="{{ route('admin.activityLogs.index') }}" 
    class="{{ request()->routeIs('activityLogs.index') ? 'active' : '' }}">

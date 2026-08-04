@@ -2,22 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\AppointmentResult;
 use App\Models\Useraccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
-class ReportController extends Controller
+class StaffReportController extends Controller
 {
     /**
      * Which period types are supported and how many cards to build for each.
      */
     protected $periodConfig = [
-        'daily'    => ['count' => 7, 'label' => 'Daily'],
-        'weekly'   => ['count' => 6, 'label' => 'Weekly'],
-        'monthly'  => ['count' => 6, 'label' => 'Monthly'],
-        'annually' => ['count' => 5, 'label' => 'Annual'],
+        'daily'     => ['count' => 7,  'label' => 'Daily'],
+        'weekly'    => ['count' => 6,  'label' => 'Weekly'],
+        'monthly'   => ['count' => 6,  'label' => 'Monthly'],
+        'halfyear'  => ['count' => 4,  'label' => 'Half-Yearly'],
     ];
 
     public function index(Request $request)
@@ -30,16 +31,17 @@ class ReportController extends Controller
 
         $periods = $this->buildPeriods($filter);
 
-        return view('systemreports', [
-            'periods'     => $periods,
-            'filter'      => $filter,
-            'filterLabel' => $this->periodConfig[$filter]['label'],
+        return view('Staff_SReports', [
+            'periods'    => $periods,
+            'filter'     => $filter,
+            'filterLabel'=> $this->periodConfig[$filter]['label'],
         ]);
     }
 
     /**
-     * AJAX endpoint: return the stats for ONE period only, fetched when
-     * admin clicks "Generate Report" on a card.
+     * AJAX endpoint: return the stats for ONE period only (lazy-load, like
+     * the admin "Generate Report" button). Avoids computing every period's
+     * stats on every page load.
      */
     public function generate(Request $request)
     {
@@ -57,7 +59,8 @@ class ReportController extends Controller
     /**
      * Build the list of period "cards" (date ranges + labels) for the given
      * filter type. Stats are NOT computed here — only date boundaries and
-     * display labels, so the page loads fast.
+     * display labels, so the page loads fast. Stats are fetched on demand
+     * via the generate() endpoint when staff click "Generate Report".
      */
     protected function buildPeriods(string $filter): array
     {
@@ -92,12 +95,13 @@ class ReportController extends Controller
                     $isCurrent = $i === 0;
                     break;
 
-                case 'annually':
+                case 'halfyear':
                 default:
-                    $year = $today->copy()->subYears($i);
-                    $start = $year->copy()->startOfYear();
-                    $end   = $year->copy()->endOfYear();
-                    $label = $year->format('Y');
+                    // Each "half" is 6 months back from today, in 6-month blocks.
+                    $end   = $today->copy()->subMonths($i * 6)->endOfMonth();
+                    $start = $end->copy()->subMonths(5)->startOfMonth();
+                    $half  = $end->month <= 6 ? 'H1' : 'H2';
+                    $label = $half . ' ' . $end->year;
                     $isCurrent = $i === 0;
                     break;
             }
@@ -117,6 +121,8 @@ class ReportController extends Controller
 
     /**
      * Compute the actual report stats for a single date range.
+     * Mirrors the shape used by the admin System Reports view
+     * (appointments / lab_results / patients).
      */
     protected function buildStats(Carbon $start, Carbon $end): array
     {
@@ -124,17 +130,19 @@ class ReportController extends Controller
             $start->toDateString(), $end->toDateString(),
         ]);
 
-        $total     = (clone $appointmentsQuery)->count();
-        $approved  = (clone $appointmentsQuery)->where('status', 'approved')->count();
-        $pending   = (clone $appointmentsQuery)->where('status', 'pending')->count();
-        $cancelled = (clone $appointmentsQuery)->where('status', 'cancelled')->count();
-        $completed = (clone $appointmentsQuery)->where('status', 'completed')->count();
+        $total      = (clone $appointmentsQuery)->count();
+        $approved   = (clone $appointmentsQuery)->where('status', 'approved')->count();
+        $pending    = (clone $appointmentsQuery)->where('status', 'pending')->count();
+        $cancelled  = (clone $appointmentsQuery)->where('status', 'cancelled')->count();
+        $completed  = (clone $appointmentsQuery)->where('status', 'completed')->count();
 
         // Adjust these two values to match however appointment_type is
         // actually stored (e.g. 'home' / 'clinic', 'Home Service' / 'Clinic Visit').
         $home   = (clone $appointmentsQuery)->where('appointment_type', 'home')->count();
         $clinic = (clone $appointmentsQuery)->where('appointment_type', 'clinic')->count();
 
+        // Lab results: an appointment counts as "processed" once it has at
+        // least one row in appointment_results.
         $appointmentIdsInRange = (clone $appointmentsQuery)->pluck('id');
 
         $processedCount = AppointmentResult::whereIn('appointment_id', $appointmentIdsInRange)
@@ -149,6 +157,9 @@ class ReportController extends Controller
         $unprocessed = $approved - $processedCount;
         $unprocessed = $unprocessed > 0 ? $unprocessed : 0;
 
+        // Patients: "new" = patient accounts created within the period.
+        // "returning" = distinct patient_id in this period who also had an
+        // appointment before the period started.
         $newPatients = Useraccount::where('role', 'patient')
             ->whereBetween('created_at', [$start, $end])
             ->count();

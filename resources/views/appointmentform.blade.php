@@ -36,7 +36,6 @@
     }
 
     .appointment-card {
-      /* FIX: Added relative positioning and z-index so buttons are clickable over the background */
       position: relative;
       z-index: 10;
       background: rgba(255, 255, 255, 0.1);
@@ -181,24 +180,10 @@
       </div>
 
       <h5 class="mb-3">2. Select a Package</h5>
+      {{-- Filled dynamically by renderPromoContainer() from /booking-data --}}
       <div class="row g-2" id="promo-container">
-        @php 
-          $promos = ['Buntis Package A', 'Buntis Package B', 'CHEM 5', 'CHEM 9', 'CHEM 10', 'General Package', 'Thyroid Test', 'Electrolytes Package', 'Pre-Employment A', 'Pre-Employment B'];
-        @endphp
-        @foreach($promos as $p)
-        <div class="col-md-6">
-          <div class="glass-option" onclick="selectPromo('{{ $p }}', event)">
-            <span>{{ $p }}</span>
-            <span class="view-link" onclick="viewDetails(event, '{{ $p }}')">view details</span>
-          </div>
-        </div>
-        @endforeach
-        
-        <div class="col-md-6">
-          <div class="glass-option" id="others-btn" onclick="openOthersModal(event)">
-            <span>Others (Select Specific Services)</span>
-            <i class="bi bi-plus-circle text-info"></i>
-          </div>
+        <div class="col-12">
+          <p class="text-muted small"><span class="spinner-border spinner-border-sm me-2"></span>Loading packages...</p>
         </div>
       </div>
 
@@ -358,12 +343,10 @@
   let customServices = []; 
   let totalPrice = 0;
 
-  const packagePrices = {
-    'Buntis Package A': 1800, 'Buntis Package B': 980, 'CHEM 5': 500,
-    'CHEM 9': 1000, 'CHEM 10': 1200, 'General Package': 1700,
-    'Thyroid Test': 2000, 'Electrolytes Package': 650,
-    'Pre-Employment A': 500, 'Pre-Employment B': 650
-  };
+  // NEW: populated live from /booking-data instead of hardcoded objects
+  let packagesData = [];
+  let servicesData = [];
+  let unavailableDates = [];
 
   const locationData = {
         "Subic": {
@@ -390,12 +373,52 @@
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('appointment_date').setAttribute('min', today);
 
-  const allAvailableServices = [
-    'Fasting Blood Sugar (FBS)', 'CBC with platelet', 'Blood Typing', 'HBsAg', 'RPR/VDRL', 
-    'Urinalysis', 'HIV', 'Cholesterol', 'Triglyceride', 'HDL', 'LDL', 'BUN', 
-    'Creatinine', 'BUA', 'SGPT', 'SGOT', 'CBC', 'Fecalysis', 'TSH', 'FT3', 'FT4',
-    'Na (Sodium)', 'K (Potassium)', 'Cl (Chloride)', 'BSM'
-  ];
+  // ── NEW: load packages/services/blocked dates from the DB, then render ──
+  async function loadBookingData() {
+    try {
+      const res = await fetch('{{ route("booking.data") }}');
+      const data = await res.json();
+      packagesData = data.packages;
+      servicesData = data.services;
+      unavailableDates = data.unavailable_dates;
+      renderPromoContainer();
+    } catch (err) {
+      document.getElementById('promo-container').innerHTML =
+        '<p class="text-danger small">Failed to load packages. Please refresh the page.</p>';
+    }
+  }
+
+  function renderPromoContainer() {
+    const container = document.getElementById('promo-container');
+    container.innerHTML = '';
+
+    packagesData.forEach(p => {
+      const col = document.createElement('div');
+      col.className = 'col-md-6';
+      col.innerHTML = `
+        <div class="glass-option" onclick="selectPromo('${p.name.replace(/'/g, "\\'")}', event, ${p.price})">
+          <span>${p.name}</span>
+          <span class="view-link" onclick="viewDetails(event, '${p.name.replace(/'/g, "\\'")}')">view details</span>
+        </div>`;
+      container.appendChild(col);
+    });
+
+    const othersCol = document.createElement('div');
+    othersCol.className = 'col-md-6';
+    othersCol.innerHTML = `
+      <div class="glass-option" id="others-btn" onclick="openOthersModal(event)">
+        <span>Others (Select Specific Services)</span>
+        <i class="bi bi-plus-circle text-info"></i>
+      </div>`;
+    container.appendChild(othersCol);
+
+    if (packagesData.length === 0) {
+      const notice = document.createElement('div');
+      notice.className = 'col-12';
+      notice.innerHTML = '<p class="text-muted small">No promo packages available right now — you can still select individual services below.</p>';
+      container.prepend(notice);
+    }
+  }
 
   function updateBarangays() {
     const muni = document.getElementById('municipality').value;
@@ -436,67 +459,70 @@
     event.currentTarget.classList.add('selected');
   }
 
-  function selectPromo(p, event) {
+  // CHANGED: price now comes in as a param (from packagesData) instead of a lookup object
+  function selectPromo(p, event, price) {
     selectedPromo = p;
     customServices = []; 
-    totalPrice = packagePrices[p] || 0;
+    totalPrice = price || 0;
     document.getElementById('hidden_service').value = p;
     document.querySelectorAll('#promo-container .glass-option').forEach(el => el.classList.remove('selected'));
     event.currentTarget.classList.add('selected');
 
-    const fastingPackages = ['Buntis Package A', 'Buntis Package B', 'CHEM 5', 'CHEM 9', 'CHEM 10', 'General Package'];
+    const pkg = packagesData.find(x => x.name === p);
     const warningDiv = document.getElementById('fasting-warning');
-    if(fastingPackages.includes(p)) warningDiv.classList.remove('d-none');
+    if (pkg && pkg.requires_fasting) warningDiv.classList.remove('d-none');
     else warningDiv.classList.add('d-none');
   }
 
+  // CHANGED: builds checkboxes from servicesData (DB-backed), shows each price
   function openOthersModal(event) {
     const listContainer = document.getElementById('custom-services-list');
     listContainer.innerHTML = '';
-    allAvailableServices.sort().forEach(service => {
+    if (servicesData.length === 0) {
+      listContainer.innerHTML = '<p class="text-muted small">No individual services available right now.</p>';
+    }
+    servicesData.forEach(service => {
       const div = document.createElement('div');
       div.className = 'custom-service-item';
-      div.innerHTML = `<input type="checkbox" class="service-check" value="${service}" id="chk-${service}"><label for="chk-${service}" class="ms-2">${service}</label>`;
+      div.innerHTML = `<input type="checkbox" class="service-check" value="${service.name}" data-price="${service.price}" id="chk-${service.id}">
+                        <label for="chk-${service.id}" class="ms-2">${service.name} <span class="text-info">(₱${Number(service.price).toLocaleString()})</span></label>`;
       listContainer.appendChild(div);
     });
     new bootstrap.Modal(document.getElementById('othersModal')).show();
   }
 
+  // CHANGED: totalPrice now sums real per-service prices instead of resetting to 0
   function confirmCustomServices() {
     const checked = document.querySelectorAll('.service-check:checked');
     if (checked.length === 0) { alert("Please select at least one service."); return; }
     customServices = Array.from(checked).map(cb => cb.value);
     selectedPromo = "Custom: " + customServices.join(', ');
-    totalPrice = 0; 
+    totalPrice = Array.from(checked).reduce((sum, cb) => sum + parseFloat(cb.dataset.price), 0);
     document.getElementById('hidden_service').value = selectedPromo;
     document.querySelectorAll('#promo-container .glass-option').forEach(el => el.classList.remove('selected'));
     document.getElementById('others-btn').classList.add('selected');
     bootstrap.Modal.getInstance(document.getElementById('othersModal')).hide();
   }
 
+  // CHANGED: reads inclusions/price from packagesData instead of a hardcoded object
   function viewDetails(event, promoName) {
     event.stopPropagation();
-    const packageData = {
-      'Buntis Package A': { price: '1,800', items: ['Fasting Blood Sugar (FBS)', 'CBC with platelet', 'Blood Typing', 'HBsAg', 'RPR/VDRL', 'Urinalysis', 'HIV', '*8 hours fasting'] },
-      'Buntis Package B': { price: '980', items: ['Fasting Blood Sugar (FBS)', 'CBC with platelet', 'Blood Typing', 'HBsAg', 'RPR/VDRL', 'Urinalysis', '*8 hours fasting'] },
-      'CHEM 5': { price: '500', items: ['FBS', 'Cholesterol', 'Triglyceride', 'HDL', 'LDL'] },
-      'CHEM 9': { price: '1,000', items: ['FBS', 'Cholesterol', 'Triglyceride', 'HDL', 'LDL', 'BUN', 'Creatinine', 'BUA', 'SGPT'] },
-      'CHEM 10': { price: '1,200', items: ['FBS', 'Cholesterol', 'Triglyceride', 'HDL', 'LDL', 'BUN', 'Creatinine', 'BUA', 'SGPT', 'SGOT'] },
-      'General Package': { price: '1,700', items: ['CBC with Platelet', 'Urinalysis', 'Fecalysis', 'FBS', 'Cholesterol', 'Triglyceride', 'HDL', 'LDL', 'BUN', 'Creatinine', 'BUA', 'SGPT', 'SGOT'] },
-      'Thyroid Test': { price: '2,000', items: ['TSH', 'FT3', 'FT4'] },
-      'Electrolytes Package': { price: '650', items: ['Na (Sodium)', 'K (Potassium)', 'Cl (Chloride)'] },
-      'Pre-Employment A': { price: '500', items: ['CBC', 'Urinalysis', 'Fecalysis', 'HBsAg'] },
-      'Pre-Employment B': { price: '650', items: ['BSM', 'Urinalysis', 'Fecalysis', 'HBsAg'] }
-    };
-    const data = packageData[promoName];
+    const pkg = packagesData.find(p => p.name === promoName);
     document.getElementById('modalTitle').innerText = promoName;
     const listContainer = document.getElementById('modalInclusions');
     listContainer.innerHTML = '';
-    if(data) { data.items.forEach(item => { const li = document.createElement('li'); li.innerText = item; listContainer.appendChild(li); }); }
-    document.getElementById('modalPrice').innerText = data ? `₱${data.price}` : "";
+    if (pkg) {
+      pkg.inclusions.forEach(item => {
+        const li = document.createElement('li');
+        li.innerText = item;
+        listContainer.appendChild(li);
+      });
+    }
+    document.getElementById('modalPrice').innerText = pkg ? `₱${pkg.price.toLocaleString()}` : "";
     new bootstrap.Modal(document.getElementById('detailsModal')).show();
   }
 
+  // CHANGED: checks staff-blocked dates (unavailableDates) before fetching slots
   async function fetchSlots() {
     const dateInput = document.getElementById('appointment_date');
     const dateValue = dateInput.value;
@@ -509,6 +535,13 @@
       alert("SMH is closed on weekends. Please select a date between Monday and Friday.");
       dateInput.value = ""; 
       container.innerHTML = '<p class="text-danger">Closed on Weekends. Please select a weekday.</p>';
+      return;
+    }
+
+    if (unavailableDates.includes(dateValue)) {
+      alert("SMH is closed on this date. Please choose another day.");
+      dateInput.value = "";
+      container.innerHTML = '<p class="text-danger">This date is unavailable. Please select another weekday.</p>';
       return;
     }
 
@@ -602,6 +635,8 @@
   }
 
   window.onload = function() {
+    loadBookingData(); // NEW — must run first so promo-container is populated
+
     const saved = localStorage.getItem('smh_booking_draft');
     if(saved) {
       const d = JSON.parse(saved);

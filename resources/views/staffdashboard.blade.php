@@ -119,6 +119,7 @@
       top: 81px;
       height: calc(100vh - 81px);
       transition: transform 0.3s ease-in-out;
+      overflow-y: auto;
     }
 
     .sidebar h3 { text-align: center; margin-bottom: 20px; }
@@ -138,6 +139,47 @@
       color: #fff;
       transform: translateX(5px);
       border: 1px solid rgba(0, 212, 255, 0.5);
+    }
+
+    /* SETTINGS / MANAGE DROPDOWN */
+    .sidebar-dropdown-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .sidebar-dropdown-toggle i.bi-gear {
+      margin-right: 8px;
+    }
+    .sidebar-dropdown-caret {
+      margin-left: auto;
+      font-size: 0.75rem;
+      transition: transform 0.2s ease;
+    }
+    .sidebar-dropdown-caret.open {
+      transform: rotate(180deg);
+    }
+
+    .sidebar-submenu {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .sidebar-submenu.open {
+      max-height: 320px; /* enough to fit 4 items comfortably */
+      margin-top: -2px;
+    }
+    .sidebar-submenu a {
+      padding-left: 40px; /* indent under parent icon+label */
+      font-size: 0.88rem;
+      opacity: 0.85;
+    }
+    .sidebar-submenu a.active,
+    .sidebar-submenu a:hover {
+      opacity: 1;
     }
 
     /* CONTENT */
@@ -204,7 +246,6 @@
       <i class="bi bi-person-circle" style="font-size: 22px;"></i>
       <div class="profile-dropdown-content">
         <a href="#">Profile</a>
-        <a href="#">Settings</a>
         <form action="{{ route('logout') }}" method="POST">
           @csrf
           <button type="submit" style="width:100%; background:none; border:none; color:#fff; padding:10px; text-align:left;">Logout</button>
@@ -217,15 +258,47 @@
 
     <div class="sidebar" id="sidebar">
       <h3>Menu</h3>
-      <a href="#"><i class="bi bi-file-earmark-text"></i> System Reports</a>
-      <a href="#"><i class="bi bi-file-text"></i> Generate Reports</a>
-      <a href="#">
-        <i class="bi bi-calendar-check"></i> Appointment Schedule
+      <a href="{{ route('staff.reports.index') }}" class="{{ request()->routeIs('staff.reports.index') ? 'active' : '' }}">
+          <i class="bi bi-clipboard2-pulse"></i> System Reports
       </a>
+    <a href="{{ route('staff.appointments.approved') }}" class="{{ request()->routeIs('staff.appointments.approved') ? 'active' : '' }}">
+        <i class="bi bi-calendar-check"></i> Appointment Schedule
+    </a>
     <a href="{{ route('appointments.requests') }}" class="{{ request()->routeIs('appointments.requests') ? 'active' : '' }}">
       <i class="bi bi-envelope"></i> Appointment Requests
     </a>
-      <a href="#"><i class="bi bi-person-badge"></i> Manage Accounts</a>
+
+      {{-- Settings / Manage dropdown --}}
+      @php
+          $settingsRoutes = [
+              'staff.settings.promo',
+              'staff.settings.package',
+              'staff.settings.price',
+              'staff.settings.unavailable',
+          ];
+          $settingsActive = request()->routeIs($settingsRoutes);
+      @endphp
+
+      <a href="#" class="sidebar-dropdown-toggle {{ $settingsActive ? 'active' : '' }}"
+         onclick="event.preventDefault(); toggleSidebarDropdown(this)">
+          <i class="bi bi-gear"></i> Settings/ Manage
+          <i class="bi bi-chevron-down sidebar-dropdown-caret {{ $settingsActive ? 'open' : '' }}"></i>
+      </a>
+
+      <div class="sidebar-submenu {{ $settingsActive ? 'open' : '' }}">
+          <a href="{{ route('staff.settings.promo') }}" class="{{ request()->routeIs('staff.settings.promo') ? 'active' : '' }}">
+              <i class="bi bi-megaphone"></i> Add Promo
+          </a>
+          <a href="{{ route('staff.settings.package') }}" class="{{ request()->routeIs('staff.settings.package') ? 'active' : '' }}">
+              <i class="bi bi-box-seam"></i> Add Package Type
+          </a>
+          <a href="{{ route('staff.settings.price') }}" class="{{ request()->routeIs('staff.settings.price') ? 'active' : '' }}">
+              <i class="bi bi-tag"></i> Modify Price
+          </a>
+          <a href="{{ route('staff.settings.unavailable') }}" class="{{ request()->routeIs('staff.settings.unavailable') ? 'active' : '' }}">
+              <i class="bi bi-calendar-x"></i> Block Unavailable Days
+          </a>
+      </div>
     </div>
 
     <div class="content-area">
@@ -286,6 +359,14 @@
         sidebar.classList.remove('active');
       }
     });
+
+    // Settings / Manage sidebar dropdown
+    function toggleSidebarDropdown(el) {
+      const submenu = el.nextElementSibling;
+      const caret = el.querySelector('.sidebar-dropdown-caret');
+      submenu.classList.toggle('open');
+      caret.classList.toggle('open');
+    }
   </script>
 
 </body>

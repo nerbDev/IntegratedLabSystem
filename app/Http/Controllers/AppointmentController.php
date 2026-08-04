@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Appointment; 
-use App\Models\UserAccount; 
+use App\Models\Package;
+use App\Models\Service;
+use App\Models\UnavailableDate;
 use App\Services\ActivityLogger;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Models\ActivityLog;
+use App\Models\UserAccount;
 
 class AppointmentController extends Controller
 {
@@ -28,6 +31,33 @@ class AppointmentController extends Controller
                         ->toArray();
 
         return response()->json(['taken' => $takenSlots]);
+    }
+
+    /**
+     * Public: Feeds the patient booking form with live packages, individual
+     * services, and staff-blocked dates. Replaces what used to be hardcoded
+     * JS objects (packagePrices / allAvailableServices) in the blade.
+     */
+    public function bookingData()
+    {
+        return response()->json([
+            'packages' => Package::where('is_active', true)
+                ->with('inclusions')
+                ->orderBy('name')
+                ->get()
+                ->map(fn ($p) => [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'price' => (float) $p->price,
+                    'requires_fasting' => $p->requires_fasting,
+                    'inclusions' => $p->inclusions->pluck('item_name'),
+                ]),
+            'services' => Service::where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'price']),
+            'unavailable_dates' => UnavailableDate::pluck('date')
+                ->map(fn ($d) => $d->format('Y-m-d')),
+        ]);
     }
 
     /**
@@ -51,6 +81,15 @@ class AppointmentController extends Controller
             'street_details'   => 'required|string',
             'landmark'         => 'required|string',
         ]);
+
+        // Guard against booking a staff-blocked date (belt-and-suspenders —
+        // the JS already prevents this in fetchSlots(), but that's client-side only)
+        $isBlocked = UnavailableDate::where('date', $request->appointment_date)->exists();
+        if ($isBlocked) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['appointment_date' => 'This date is unavailable for booking. Please choose another day.']);
+        }
 
         $formattedTime = Carbon::parse($request->appointment_time)->format('H:i:s');
 
@@ -204,6 +243,17 @@ class AppointmentController extends Controller
                     ->get();
 
         return view('activity-log.timeline', compact('appointment', 'logs'));
+    }
+    
+// for the staff to see the list of "approved" schedules
+    public function approvedSchedule()
+    {
+        $approvedAppointments = Appointment::where('status', 'approved')
+            ->orderBy('appointment_date')
+            ->orderBy('appointment_time')
+            ->get();
+
+        return view('SSappointmentschedule', compact('approvedAppointments'));
     }
 
     /**

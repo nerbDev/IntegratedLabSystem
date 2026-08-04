@@ -389,10 +389,9 @@
           <h5>Location</h5>
           <p class="mb-0 text-muted">
             <strong>SMH Laboratory</strong><br>
-            123 Health Avenue, Quezon City<br>
-            Metro Manila, Philippines 1100<br>
-            <i class="bi bi-clock me-1"></i> Mon – Sat: 6:00 AM – 6:00 PM<br>
-            <i class="bi bi-clock me-1"></i> Sun: 7:00 AM – 12:00 NN
+            14-A National Highway Mangan-Vaca<br>
+            Subic, Philippines, 2209<br>
+            <i class="bi bi-clock me-1"></i> Mon – Sat: 8:00 AM – 3:00 PM<br>
           </p>
         </div>
       </div>

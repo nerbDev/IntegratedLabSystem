@@ -1,8 +1,8 @@
-@extends('layouts.adminlayout')
+@extends('layouts.masterlayout')
 
 @section('title', $filterLabel . ' System Reports')
 
-@section('admincontent')
+@section('content')
 <style>
     .report-page { padding: 28px 10px; max-width: 960px; margin: 0 auto; }
 
@@ -30,24 +30,10 @@
         text-decoration: none; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px;
     }
     .rp-tab:hover { border-color: rgba(0,212,255,0.3); color: #00d4ff; }
-    .rp-tab.active { background: rgba(0,212,255,0.12); border-color: rgba(0,212,255,0.4); color: #00d4ff; }
-
-    /* ── Collapse Notice ── */
-    .rp-notice {
-        display: none; background: rgba(0,212,255,0.06);
-        border: 1px dashed rgba(0,212,255,0.3); border-radius: 10px;
-        padding: 10px 18px; margin-bottom: 16px;
-        align-items: center; gap: 10px; font-size: 0.8rem;
-        color: rgba(255,255,255,0.45);
+    .rp-tab.active {
+        background: rgba(0,212,255,0.12); border-color: rgba(0,212,255,0.4);
+        color: #00d4ff;
     }
-    .rp-notice.visible { display: flex; }
-    .rp-notice-btn {
-        margin-left: auto; background: none;
-        border: 1px solid rgba(0,212,255,0.3); color: #00d4ff;
-        padding: 4px 14px; border-radius: 6px; font-size: 0.76rem;
-        cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px;
-    }
-    .rp-notice-btn:hover { background: rgba(0,212,255,0.12); }
 
     /* ── Card ── */
     .rp-card {
@@ -57,7 +43,6 @@
         overflow: hidden; transition: border-color 0.25s;
     }
     .rp-card.is-current { border-color: rgba(0,212,255,0.3); background: rgba(0,212,255,0.03); }
-    .rp-card.is-hidden  { display: none; }
     .rp-card:hover { border-color: rgba(0,212,255,0.2); }
 
     .rp-card-header {
@@ -79,9 +64,7 @@
         letter-spacing: 1.2px; text-transform: uppercase;
         padding: 3px 10px; border-radius: 20px;
     }
-    .rp-card-actions { display: flex; align-items: center; gap: 8px; }
 
-    /* ── Buttons ── */
     .btn-generate {
         background: rgba(0,212,255,0.12); color: #00d4ff;
         border: 1px solid rgba(0,212,255,0.35); border-radius: 9px;
@@ -96,13 +79,6 @@
     }
     .btn-generate.loading { opacity: 0.6; pointer-events: none; }
 
-    .btn-eye {
-        background: none; border: none; color: rgba(255,255,255,0.3);
-        font-size: 1rem; cursor: pointer; padding: 5px 7px;
-        border-radius: 6px; transition: 0.2s;
-    }
-    .btn-eye:hover, .btn-eye.active { color: #00d4ff; background: rgba(0,212,255,0.1); }
-
     .btn-print {
         background: none; border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.5);
         font-size: 0.9rem; cursor: pointer; padding: 6px 10px;
@@ -111,7 +87,6 @@
     .btn-print:hover { border-color: #00d4ff; color: #00d4ff; background: rgba(0,212,255,0.08); }
     .btn-print[disabled] { opacity: 0.35; cursor: not-allowed; }
 
-    /* ── Card Body ── */
     .rp-card-body { display: none; padding: 0 22px 22px; border-top: 1px solid rgba(255,255,255,0.06); }
     .rp-card-body.open { display: block; }
 
@@ -145,10 +120,6 @@
     .accent-purple .rp-tile-val { color: #bf94ff; }
     .accent-cyan .rp-tile-val { color: #00d4ff; }
 
-    /* ── Print-only report head (hidden on screen) ── */
-    .rp-print-head { display: none; }
-
-    /* ── Spinner ── */
     .rp-spinner {
         width: 13px; height: 13px; border-radius: 50%;
         border: 2px solid rgba(0,212,255,0.25);
@@ -158,11 +129,6 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     .fade-up { animation: fadeUp 0.3s ease forwards; }
-
-    /* Note: printing no longer happens on this page directly — see
-       printReport() below, which builds a fully isolated print document
-       in a hidden iframe so nothing from the admin layout (topbar,
-       sidebar, card shells, shadows) can bleed into the printout. */
 </style>
 
 <div class="report-page">
@@ -171,45 +137,35 @@
     <div class="rp-header">
         <div>
             <h2><i class="bi bi-clipboard2-pulse"></i> {{ $filterLabel }} System Reports</h2>
-            <p class="rp-subtitle">Integrated Lab System &nbsp;·&nbsp; Admin Console</p>
+            <p class="rp-subtitle">Integrated Lab System &nbsp;·&nbsp; Staff Console</p>
         </div>
-        <span class="rp-system-badge"><i class="bi bi-shield-check me-1"></i> Admin View</span>
+        <span class="rp-system-badge"><i class="bi bi-person-badge me-1"></i> Staff View</span>
     </div>
 
     {{-- Filter Tabs --}}
     <div class="rp-tabs">
-        <a href="{{ route('admin.reports.index', ['filter' => 'daily']) }}"
+        <a href="{{ route('staff.reports.index', ['filter' => 'daily']) }}"
            class="rp-tab {{ $filter === 'daily' ? 'active' : '' }}">
             <i class="bi bi-calendar-day"></i> Daily
         </a>
-        <a href="{{ route('admin.reports.index', ['filter' => 'weekly']) }}"
+        <a href="{{ route('staff.reports.index', ['filter' => 'weekly']) }}"
            class="rp-tab {{ $filter === 'weekly' ? 'active' : '' }}">
             <i class="bi bi-calendar-week"></i> Weekly
         </a>
-        <a href="{{ route('admin.reports.index', ['filter' => 'monthly']) }}"
+        <a href="{{ route('staff.reports.index', ['filter' => 'monthly']) }}"
            class="rp-tab {{ $filter === 'monthly' ? 'active' : '' }}">
             <i class="bi bi-calendar3"></i> Monthly
         </a>
-        <a href="{{ route('admin.reports.index', ['filter' => 'annually']) }}"
-           class="rp-tab {{ $filter === 'annually' ? 'active' : '' }}">
-            <i class="bi bi-calendar-range"></i> Annually
+        <a href="{{ route('staff.reports.index', ['filter' => 'halfyear']) }}"
+           class="rp-tab {{ $filter === 'halfyear' ? 'active' : '' }}">
+            <i class="bi bi-calendar-range"></i> Half a Year
         </a>
-    </div>
-
-    {{-- Collapse Notice --}}
-    <div class="rp-notice" id="rpNotice">
-        <i class="bi bi-eye-slash" style="color:#00d4ff;"></i>
-        <span>Other {{ strtolower($filterLabel) }} reports are hidden. Use the eye icon or show all.</span>
-        <button class="rp-notice-btn" onclick="showAllPeriods()">
-            <i class="bi bi-eye"></i> Show All
-        </button>
     </div>
 
     {{-- Period Cards --}}
     @foreach($periods as $index => $period)
     <div class="rp-card {{ $period['is_current'] ? 'is-current' : '' }}" id="card-{{ $index }}">
 
-        {{-- Card Header --}}
         <div class="rp-card-header" onclick="toggleBody({{ $index }})">
             <div class="rp-card-meta">
                 <span class="rp-week-pill"><i class="bi bi-calendar3"></i> {{ $period['label'] }}</span>
@@ -218,7 +174,7 @@
                     <span class="rp-current-tag"><i class="bi bi-circle-fill" style="font-size:0.45rem;"></i> Current</span>
                 @endif
             </div>
-            <div class="rp-card-actions">
+            <div class="rp-card-actions" style="display:flex; align-items:center; gap:8px;">
                 <button class="btn-generate" id="genbtn-{{ $index }}"
                     onclick="generateReport(event, {{ $index }}, '{{ $period['start'] }}', '{{ $period['end'] }}')">
                     <i class="bi bi-file-earmark-bar-graph"></i> Generate Report
@@ -227,32 +183,15 @@
                     onclick="printReport(event, {{ $index }}, '{{ $period['start'] }}', '{{ $period['end'] }}')">
                     <i class="bi bi-printer"></i>
                 </button>
-                @if($period['is_current'])
-                    <button class="btn-eye" id="eye-{{ $index }}" title="Hide other {{ strtolower($filterLabel) }} reports"
-                        onclick="toggleOthers(event, {{ $index }})">
-                        <i class="bi bi-eye"></i>
-                    </button>
-                @else
-                    <button class="btn-eye" id="eye-{{ $index }}" title="Expand"
-                        onclick="event.stopPropagation(); toggleBody({{ $index }})">
-                        <i class="bi bi-chevron-down"></i>
-                    </button>
-                @endif
             </div>
         </div>
 
-        {{-- Card Body --}}
         <div class="rp-card-body" id="body-{{ $index }}">
-            <div class="rp-print-head">
-                <h3>{{ $period['label'] }} System Report</h3>
-                <p>Integrated Lab System &middot; Admin Console &middot; {{ $period['start_disp'] }} – {{ $period['end_disp'] }}</p>
-            </div>
             <div class="rp-placeholder" id="placeholder-{{ $index }}">
                 <i class="bi bi-bar-chart-line"></i>
                 Click <strong>Generate Report</strong> to compile data for {{ $period['label'] }}.
             </div>
         </div>
-
     </div>
     @endforeach
 
@@ -260,12 +199,9 @@
 
 <script>
     const generated = {};
-    const reportData = {};
     const periodMeta = @json($periods); // label / start_disp / end_disp per card, for the print header
     const labLogoUrl = "{{ asset('images/SMHLogo.png') }}";
-    let othersHidden = false;
 
-    // ── Generate Report ──
     function generateReport(e, idx, start, end) {
         e.stopPropagation();
 
@@ -284,10 +220,9 @@
         btn.innerHTML = '<span class="rp-spinner"></span> Compiling…';
         ph.innerHTML  = '<i class="bi bi-hourglass-split" style="color:#00d4ff;font-size:1.6rem;display:block;margin-bottom:8px;"></i><span style="color:rgba(255,255,255,0.35);font-size:0.8rem;">Fetching data…</span>';
 
-        return fetch(`{{ route('admin.reports.generate') }}?start=${start}&end=${end}`)
+        return fetch(`{{ route('staff.reports.generate') }}?start=${start}&end=${end}`)
             .then(res => res.json())
             .then(data => {
-                reportData[idx] = data;
                 renderReport(idx, data);
                 btn.classList.remove('loading');
                 btn.classList.add('done');
@@ -302,7 +237,6 @@
             });
     }
 
-    // ── Render Report Content ──
     function renderReport(idx, data) {
         const ph = document.getElementById('placeholder-' + idx);
         const a  = data.appointments;
@@ -312,7 +246,7 @@
 
         ph.className = 'fade-up';
         ph.innerHTML = `
-            <div class="rp-section"><i class="bi bi-calendar2-check"></i> Online Appointment Summary</div>
+            <div class="rp-section"><i class="bi bi-calendar2-check"></i> Appointment Summary</div>
             <div class="rp-grid">
                 <div class="rp-tile accent-cyan">
                     <div class="rp-tile-label"><i class="bi bi-send"></i> Total Requests</div>
@@ -327,12 +261,12 @@
                 <div class="rp-tile accent-yellow">
                     <div class="rp-tile-label"><i class="bi bi-hourglass-split"></i> Pending</div>
                     <div class="rp-tile-val">${a.pending}</div>
-                    <div class="rp-tile-sub">awaiting admin action</div>
+                    <div class="rp-tile-sub">awaiting action</div>
                 </div>
                 <div class="rp-tile accent-red">
                     <div class="rp-tile-label"><i class="bi bi-x-circle"></i> Cancelled</div>
                     <div class="rp-tile-val">${a.cancelled}</div>
-                    <div class="rp-tile-sub">by patient or admin</div>
+                    <div class="rp-tile-sub">by patient or staff</div>
                 </div>
                 <div class="rp-tile">
                     <div class="rp-tile-label"><i class="bi bi-house-heart"></i> Home Service</div>
@@ -365,7 +299,7 @@
                 </div>
             </div>
 
-            <div class="rp-section"><i class="bi bi-people"></i> Patient Data Management</div>
+            <div class="rp-section"><i class="bi bi-people"></i> Patient Data</div>
             <div class="rp-grid">
                 <div class="rp-tile accent-green">
                     <div class="rp-tile-label"><i class="bi bi-person-plus"></i> New Patients</div>
@@ -386,44 +320,18 @@
         `;
     }
 
-    // ── Toggle card body ──
     function toggleBody(idx) {
         document.getElementById('body-' + idx).classList.toggle('open');
     }
 
-    // ── Eye: hide all other periods ──
-    function toggleOthers(e, activeIdx) {
-        e.stopPropagation();
-        const cards = document.querySelectorAll('.rp-card');
-
-        if (!othersHidden) {
-            cards.forEach(card => {
-                if (card.id !== 'card-' + activeIdx) card.classList.add('is-hidden');
-            });
-            document.getElementById('rpNotice').classList.add('visible');
-            document.getElementById('eye-' + activeIdx).classList.add('active');
-            othersHidden = true;
-        } else {
-            showAllPeriods();
-        }
-    }
-
-    function showAllPeriods() {
-        document.querySelectorAll('.rp-card').forEach(card => card.classList.remove('is-hidden'));
-        document.getElementById('rpNotice').classList.remove('visible');
-        document.querySelectorAll('.btn-eye').forEach(b => b.classList.remove('active'));
-        othersHidden = false;
-    }
-
-    // ── Print: works for any period type (daily/weekly/monthly/annually) ──
+    // ── Print: works for any period type (daily/weekly/monthly/half-year) ──
     // Builds a fully self-contained print document in a hidden iframe, so
     // the printout can never pick up shadows/backgrounds/margins from the
-    // admin layout (topbar, sidebar, card shells, etc).
+    // staff layout (topbar, sidebar, card shells, etc).
     function printReport(e, idx, start, end) {
         e.stopPropagation();
 
         const doPrint = () => openPrintFrame(idx, periodMeta[idx]);
-        // periodMeta[idx] has: label, start_disp, end_disp
 
         if (!generated[idx]) {
             generateReport(e, idx, start, end).then(doPrint);
