@@ -213,7 +213,6 @@
       <span>Welcome, Admin 🛠️ <i class="bi bi-caret-down-fill"></i></span>
       <div class="profile-dropdown-content">
         <a href="{{ route('admin.profile.show') }}">Profile</a>
-        <a href="#">Settings</a>
         <form action="{{ route('logout') }}" method="POST">
           @csrf
           <button type="submit" style="width:100%; background:none; border:none; color:#fff; padding:10px;">Logout</button>
@@ -235,6 +234,9 @@
    class="{{ request()->routeIs('activityLogs.index') ? 'active' : '' }}">
    <i class="bi bi-clock-history"></i> Activity Logs
 </a>
+    <a href="{{ route('admin.transactions') }}" class="{{ request()->routeIs('admin.transactions') ? 'active' : '' }}">
+     <i class="bi bi-clock-history me-2"></i> My Transactions
+    </a>
     <a href="{{ route('admin.archive.index') }}"><i class="bi bi-archive-fill"></i> Archive Records</a>
     <a href="{{ route('admin.patients.index') }}" class="nav-link {{ Request::routeIs('admin.patients.index') ? 'active' : '' }}"> <i class="bi bi-person-badge"></i> Patients</a>
     <a href="{{ route('admin.uploadResults') }}"><i class="bi bi-cloud-upload me-2"></i> Upload Results</a>

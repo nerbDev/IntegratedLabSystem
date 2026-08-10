@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -121,6 +123,7 @@
 </head>
 <body>
 
+  
 <div class="appointment-card">
   <div class="text-center mb-4">
     <img src="{{ asset('images/SMHLogo.png') }}" width="60" alt="Logo">

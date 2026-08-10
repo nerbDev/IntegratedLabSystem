@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Appointment;
 use App\Models\ArchivedAppointment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class ArchiveController extends Controller
 {
@@ -40,5 +42,43 @@ class ArchiveController extends Controller
             $archive->result->file_path,
             'Archived_Lab_Result_' . $archive->first_name . '_' . $archive->last_name . '.pdf'
         );
+    }
+
+    /**
+     * Restore an archived appointment back into the active appointments table.
+     *
+     * NOTE: this assumes ArchivedAppointment shares the same column structure
+     * as Appointment (minus the archive-specific columns like archived_at).
+     * Adjust the field list below if your archived_appointments table differs.
+     */
+    public function restore($id)
+    {
+        $archive = ArchivedAppointment::findOrFail($id);
+
+        DB::transaction(function () use ($archive) {
+            $appointment = Appointment::create([
+                'patient_id'       => $archive->patient_id,
+                'service'          => $archive->service,
+                'appointment_type' => $archive->appointment_type,
+                'appointment_date' => $archive->appointment_date,
+                'appointment_time' => $archive->appointment_time,
+                'first_name'       => $archive->first_name,
+                'middle_name'      => $archive->middle_name,
+                'last_name'        => $archive->last_name,
+                'suffix'           => $archive->suffix,
+                'email'            => $archive->email,
+                'phone'            => $archive->phone,
+                'municipality'     => $archive->municipality,
+                'barangay'         => $archive->barangay,
+                'street_details'   => $archive->street_details,
+                'landmark'         => $archive->landmark,
+                'status'           => $archive->status,
+                'notes'            => $archive->notes ?? null,
+            ]);
+
+            $archive->delete();
+        });
+
+        return redirect()->back()->with('success', 'Appointment restored successfully.');
     }
 }

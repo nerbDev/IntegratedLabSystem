@@ -11,4 +11,9 @@ class UnavailableDate extends Model
     protected $casts = [
         'date' => 'date',
     ];
+
+    public function scopeUpcoming($query)
+    {
+        return $query->where('date', '>=', now()->toDateString())->orderBy('date');
+    }
 }

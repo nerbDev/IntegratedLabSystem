@@ -19,4 +19,9 @@ class Package extends Model
     {
         return $this->hasMany(PackageInclusion::class)->orderBy('sort_order');
     }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
 }

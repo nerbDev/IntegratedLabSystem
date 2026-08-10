@@ -17,7 +17,6 @@
     }
     body::after { content: ""; position: fixed; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: -1; }
 
-    /* HEADER */
     .header {
       position: relative; z-index: 1050; display: flex; align-items: center; justify-content: space-between;
       padding: 15px 30px; background: rgba(255,255,255,0.1); backdrop-filter: blur(15px);
@@ -26,8 +25,7 @@
     .logo-section { display: flex; align-items: center; gap: 10px; }
     .logo-section img { width: 45px; }
     .welcome-text { font-weight: 500; letter-spacing: 0.5px; }
-    
-    /* MOBILE TOGGLE BUTTON */
+
     .menu-toggle {
         display: none;
         background: rgba(255, 255, 255, 0.1);
@@ -41,7 +39,6 @@
     }
     .menu-toggle:hover { background: rgba(255, 255, 255, 0.2); }
 
-    /* DROPDOWN */
     .profile-dropdown { position: relative; cursor: pointer; }
     .profile-dropdown-content {
       display: none; position: absolute; right: 0; background: rgba(30, 30, 30, 0.95);
@@ -51,7 +48,6 @@
 
     .main-content { display: flex; height: calc(100vh - 81px); position: relative; }
 
-    /* SIDEBAR RESPONSIVE LOGIC */
     .sidebar {
       width: 260px; padding: 25px 20px; background: rgba(255,255,255,0.05);
       backdrop-filter: blur(15px); border-right: 1px solid rgba(255,255,255,0.1);
@@ -64,32 +60,30 @@
       transition: all 0.3s ease; display: flex; align-items: center;
     }
     .sidebar a:hover { background: rgba(255,255,255,0.1); color: #fff; }
-    .sidebar a.active { 
-        background: rgba(0, 212, 255, 0.2); color: #00d4ff; 
+    .sidebar a.active {
+        background: rgba(0, 212, 255, 0.2); color: #00d4ff;
         border: 1px solid rgba(0, 212, 255, 0.3); font-weight: 600;
     }
 
     .content-area { flex: 1; padding: 30px; overflow-y: auto; transition: 0.3s; }
 
-    /* SCROLLBAR STYLING */
     .content-area::-webkit-scrollbar { width: 8px; }
     .content-area::-webkit-scrollbar-track { background: transparent; }
     .content-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
-    /* MOBILE BREAKPOINT (Under 992px) */
     @media (max-width: 991.98px) {
         .menu-toggle { display: block; }
         .sidebar {
             position: absolute;
-            left: -260px; /* Hidden state */
+            left: -260px;
             height: 100%;
         }
         .sidebar.show {
-            left: 0; /* Visible state */
+            left: 0;
             box-shadow: 10px 0 30px rgba(0,0,0,0.5);
         }
         .welcome-text { font-size: 0.9rem; }
-        .logo-text { display: none; } /* Hide text on small phones to save space */
+        .logo-text { display: none; }
     }
   </style>
 </head>
@@ -144,6 +138,9 @@
         <a href="{{ route('appointments.requests') }}" class="{{ request()->routeIs('requests') ? 'active' : '' }}">
           <i class="bi bi-envelope me-2"></i> Appointment Requests
         </a>
+        <a href="{{ route('staff.transactions') }}" class="{{ request()->routeIs('staff.transactions') ? 'active' : '' }}">
+          <i class="bi bi-clock-history me-2"></i> My Transactions
+        </a>
       @else
         <a href="{{ url('/patientdashboard') }}" class="{{ request()->is('patientdashboard') ? 'active' : '' }}">
           <i class="bi bi-house-door me-2"></i> Home
@@ -153,6 +150,9 @@
         </a>
         <a href="{{ url('/appointment') }}" class="{{ request()->is('appointment.form') ? 'active' : '' }}">
           <i class="bi bi-plus-circle me-2"></i> Book Appointment
+        </a>
+        <a href="{{ route('patient.transactions') }}" class="{{ request()->routeIs('patient.transactions') ? 'active' : '' }}">
+          <i class="bi bi-clock-history me-2"></i> My Transactions
         </a>
       @endif
     </div>
@@ -173,19 +173,16 @@
       menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     }
 
-    // Close menus when clicking outside
     window.onclick = function(event) {
-      // Handle Profile Dropdown
       if (!event.target.closest('.profile-dropdown')) {
         const menu = document.getElementById('profileMenu');
         if (menu) menu.style.display = 'none';
       }
 
-      // Handle Sidebar on Mobile
       const sidebar = document.getElementById('sidebarMenu');
-      if (window.innerWidth < 992 && 
-          !event.target.closest('#sidebarMenu') && 
-          !event.target.closest('.menu-toggle') && 
+      if (window.innerWidth < 992 &&
+          !event.target.closest('#sidebarMenu') &&
+          !event.target.closest('.menu-toggle') &&
           sidebar.classList.contains('show')) {
         sidebar.classList.remove('show');
       }

@@ -245,7 +245,7 @@
     <div class="profile-dropdown">
       <i class="bi bi-person-circle" style="font-size: 22px;"></i>
       <div class="profile-dropdown-content">
-        <a href="#">Profile</a>
+       <a href="{{ route('staff.profile.show') }}">Profile</a>
         <form action="{{ route('logout') }}" method="POST">
           @csrf
           <button type="submit" style="width:100%; background:none; border:none; color:#fff; padding:10px; text-align:left;">Logout</button>
@@ -260,6 +260,9 @@
       <h3>Menu</h3>
       <a href="{{ route('staff.reports.index') }}" class="{{ request()->routeIs('staff.reports.index') ? 'active' : '' }}">
           <i class="bi bi-clipboard2-pulse"></i> System Reports
+      </a>
+      <a href="{{ route('staff.transactions') }}" class="{{ request()->routeIs('staff.transactions') ? 'active' : '' }}">
+        <i class="bi bi-clock-history me-2"></i> My Transactions
       </a>
     <a href="{{ route('staff.appointments.approved') }}" class="{{ request()->routeIs('staff.appointments.approved') ? 'active' : '' }}">
         <i class="bi bi-calendar-check"></i> Appointment Schedule

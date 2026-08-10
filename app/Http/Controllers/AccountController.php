@@ -7,6 +7,8 @@ use App\Models\UserAccount;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
+use App\Models\Package;
+use App\Models\UnavailableDate;
 
 class AccountController extends Controller
 {
@@ -206,7 +208,7 @@ class AccountController extends Controller
             return $this->redirectByRole($user);
         }
 
-        return view('complete-profile', compact('user'));
+        return view('CompleteProfile', compact('user'));
     }
 
     public function completeProfile(Request $request)
@@ -265,7 +267,17 @@ class AccountController extends Controller
 
     public function patientDashboard()
     {
-        return view('patientdashboard');
+        $packages = Package::active()
+            ->with('inclusions')
+            ->latest()
+            ->take(6)
+            ->get();
+
+        $unavailableDates = UnavailableDate::upcoming()
+            ->take(8)
+            ->get();
+
+        return view('patientdashboard', compact('packages', 'unavailableDates'));
     }
 
     // ------------------------------------------------------------
@@ -317,4 +329,86 @@ class AccountController extends Controller
 
         return redirect()->back()->with('success', 'User account permanently scrubbed from system registry.');
     }
+
+    // ------------------------------------------------------------
+// Patient Self-Service Account Settings
+// ------------------------------------------------------------
+
+public function patientAccountSettingShow()
+{
+    $user = Auth::user();
+
+    if (!$user->isPatient()) {
+        abort(403, 'Unauthorized.');
+    }
+
+    return view('patient-profile.PSaccountsetting', compact('user'));
+}
+
+public function patientAccountSettingUpdate(Request $request)
+{
+    $user = Auth::user();
+
+    if (!$user->isPatient()) {
+        abort(403, 'Unauthorized.');
+    }
+
+    // NOTE: 'role' and 'id' are intentionally NOT in this validation list.
+    // A patient must never be able to send them, even if they tamper with the form.
+    $validated = $request->validate([
+        'first_name'     => 'required|string|max:255',
+        'middle_name'    => 'nullable|string|max:255',
+        'last_name'      => 'required|string|max:255',
+        'date_of_birth'  => 'required|date',
+        'sex'            => 'required|in:male,female',
+        'phone_number'   => 'required|string|max:20',
+        'email'          => 'required|email|unique:useraccount,email,' . $user->id,
+        'Umunicipality'  => 'required|string|max:255',
+        'Ubarangay'      => 'required|string|max:255',
+        'Ustreet_house'  => 'required|string|max:255',
+        'contact_person' => 'required|string|max:255',
+        'contact_number' => 'required|string|max:20',
+    ]);
+
+    // If the account is OAuth-linked, don't let them silently change the
+    // login email out from under the linked provider.
+    if ($user->oauth_provider && $validated['email'] !== $user->email) {
+        return back()->with('error', 'Email is managed by your ' . ucfirst($user->oauth_provider) . ' sign-in and can\'t be changed here.');
+    }
+
+    // TODO: hook into your audit log here, e.g.:
+    // ActivityLog::record($user, 'patient_self_update', $user->getOriginal(), $validated);
+
+    $user->update($validated);
+
+    return back()->with('success', 'Your profile has been updated successfully.');
+}
+
+public function patientPasswordUpdate(Request $request)
+{
+    $user = Auth::user();
+
+    if (!$user->isPatient()) {
+        abort(403, 'Unauthorized.');
+    }
+
+    if (is_null($user->password)) {
+        return back()->with('error', 'This account uses Google/Facebook sign-in and has no password to change.');
+    }
+
+    $validated = $request->validate([
+        'current_password'      => 'required|string',
+        'new_password'          => 'required|string|min:6|confirmed',
+    ]);
+
+    if (!Hash::check($validated['current_password'], $user->password)) {
+        return back()->with('error', 'Current password is incorrect.');
+    }
+
+    $user->update([
+        'password' => Hash::make($validated['new_password']),
+    ]);
+
+    return back()->with('success', 'Password changed successfully.');
+}
 }

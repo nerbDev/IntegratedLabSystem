@@ -69,6 +69,15 @@
     }
     .btn-glass-outline:hover { background: rgba(0, 212, 255, 0.15); color: #00d4ff; }
 
+    .btn-glass-outline-warn {
+        background: transparent;
+        border: 1px solid #ffc107;
+        color: #ffc107;
+        border-radius: 8px;
+        font-size: 0.8rem;
+    }
+    .btn-glass-outline-warn:hover { background: rgba(255, 193, 7, 0.15); color: #ffc107; }
+
     .archive-table {
         width: 100%;
         border-collapse: separate;
@@ -126,6 +135,13 @@
         <i class="bi bi-archive-fill text-info"></i> Archived Records
     </h2>
 
+    @if(session('success'))
+        <div class="alert alert-success" style="background: rgba(0,255,150,0.1); border: 1px solid rgba(0,255,150,0.3); color: #00ff96;">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger" style="background: rgba(255,92,122,0.1); border: 1px solid rgba(255,92,122,0.4); color: #ff5c7a;">{{ session('error') }}</div>
+    @endif
+
     {{-- Filters --}}
     <div class="card glass-card mb-4">
         <div class="card-body">
@@ -167,6 +183,7 @@
                             <th>Status</th>
                             <th>Archived On</th>
                             <th>Lab Result</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -188,10 +205,18 @@
                                         <span class="text-white-50">No file</span>
                                     @endif
                                 </td>
+                                <td>
+                                    <form method="POST" action="{{ route('admin.archive.restore', $archive->id) }}" onsubmit="return confirm('Restore this appointment back to active records?')">
+                                        @csrf
+                                        <button type="submit" class="btn btn-glass-outline-warn btn-sm">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Restore
+                                        </button>
+                                    </form>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-white-50 py-4">No archived records found.</td>
+                                <td colspan="7" class="text-center text-white-50 py-4">No archived records found.</td>
                             </tr>
                         @endforelse
                     </tbody>

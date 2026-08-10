@@ -13,18 +13,18 @@ class ActivityLogger
         string $description,
         ?array $old = null,
         ?array $new = null,
-        ?int $referenceId = null,
+        ?int $reference_id = null,
         string $status = 'success'
     ) {
         $user = Auth::user();
 
         ActivityLog::create([
             'user_id'      => $user->id ?? null,
-            'user_name'    => $user->name ?? 'System',
+            'user_name'    => $user->first_name ?? 'System',
             'user_role'    => $user->role ?? 'N/A',
             'module'       => $module,
             'action'       => $action,
-            'reference_id' => $referenceId,   // fixed: snake_case to match DB column
+            'reference_id' => $reference_id,   // fixed: snake_case to match DB column
             'description'  => $description,
             'old_values'   => $old,
             'new_values'   => $new,

@@ -13,6 +13,9 @@ use App\Http\Controllers\ArchiveController;
 use App\Http\Controllers\StaffReportController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\StaffProfileController;
+use App\Http\Controllers\TransactionController;
+
 
 // ------------------------------
 // Public Landing Page
@@ -45,25 +48,21 @@ Route::post('/complete-profile', [SocialAuthController::class, 'completeProfile'
 // ------------------------------
 // Protected Routes (Dashboards)
 // ------------------------------
-Route::middleware(['auth'])->group(function () {
+    Route::middleware(['auth'])->group(function () {
 
-    Route::middleware(['role:admin'])->group(function () {
-        Route::get('/admindashboard', [AccountController::class, 'dashboard'])->name('admindashboard');
+        Route::middleware(['role:admin'])->group(function () {
+            Route::get('/admindashboard', [AccountController::class, 'dashboard'])->name('admindashboard');
+        });
+
+        Route::middleware(['role:staff'])->group(function () {
+            Route::get('/staffdashboard', [AccountController::class, 'staffDashboard'])->name('staffdashboard');
+        });
+
+        Route::middleware(['role:patient'])->group(function () {
+            Route::get('/patientdashboard', [AccountController::class, 'patientDashboard'])->name('patientdashboard');
+        });
+
     });
-
-    Route::middleware(['role:staff'])->group(function () {
-        Route::get('/staffdashboard', function () {
-            return view('staffdashboard');
-        })->name('staffdashboard');
-    });
-
-    Route::middleware(['role:patient'])->group(function () {
-        Route::get('/patientdashboard', function () {
-            return view('patientdashboard');
-        })->name('patientdashboard');
-    });
-
-});
 
 
 // ------------------------------
@@ -171,6 +170,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::put('/admin/profile/password', [AdminProfileController::class, 'updatePassword'])->name('admin.profile.password');
 });
 
+
+// Archive Records
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/archive', [ArchiveController::class, 'index'])->name('admin.archive.index');
 });
@@ -179,6 +180,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/archive', [ArchiveController::class, 'index'])->name('admin.archive.index');
     Route::get('/admin/archive/{id}/download', [ArchiveController::class, 'download'])->name('admin.archive.download');
 });
+
+Route::post('/admin/archive/{id}/restore', [ArchiveController::class, 'restore'])->name('admin.archive.restore');
  
 // Staff: System Reports
 Route::middleware(['auth', 'role:staff'])->group(function () {
@@ -198,6 +201,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         ->name('admin.reports.generate');
 });
 
+// for the staff to view approved schedules 
 Route::get('/staff/appointments/approved', [AppointmentController::class, 'approvedSchedule'])
     ->name('staff.appointments.approved');
 
@@ -227,3 +231,32 @@ Route::delete('/staff/settings/unavailable/{unavailableDate}', [SettingsControll
  
 // Public — feeds the patient booking form (no auth needed, it's read-only)
 Route::get('/booking-data', [AppointmentController::class, 'bookingData'])->name('booking.data');
+
+
+// for the staff to get, and edit profile
+Route::middleware(['auth', 'role:staff'])->group(function () {
+    Route::get('/staff/profile', [StaffProfileController::class, 'show'])->name('staff.profile.show');
+    Route::put('/staff/profile', [StaffProfileController::class, 'update'])->name('staff.profile.update');
+    Route::put('/staff/profile/password', [StaffProfileController::class, 'updatePassword'])->name('staff.profile.password');
+});
+
+
+// for the patient to view and  edit profile
+Route::middleware('auth')->group(function () {
+    Route::get('/patient/PSaccount-setting', [AccountController::class, 'patientAccountSettingShow'])->name('patient.accountsetting');
+    Route::put('/patient/PSaccount-setting', [AccountController::class, 'patientAccountSettingUpdate'])->name('patient.accountsetting.update');
+    Route::put('/patient/account-setting/password', [AccountController::class, 'patientPasswordUpdate'])->name('patient.accountsetting.password');
+});
+
+// --- Staff group (wherever 'staffdashboard' / 'appointments.requests' are defined) ---
+Route::get('/staff/transactions', [TransactionController::class, 'staffTransactions'])
+    ->name('staff.transactions');
+ 
+// --- Patient group (wherever 'patient.appointments' is defined) ---
+Route::get('/patient/transactions', [TransactionController::class, 'patientTransactions'])
+    ->name('patient.transactions');
+ 
+// --- Admin group (wherever your admin-only routes are defined) ---
+Route::get('/admin/my-transactions', [TransactionController::class, 'adminTransactions'])
+    ->name('admin.transactions');
+ 
