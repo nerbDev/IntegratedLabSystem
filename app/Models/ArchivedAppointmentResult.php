@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ArchivedAppointmentResult extends Model
 {
-    const UPDATED_AT = null;
+    public $timestamps = false; // no created_at/updated_at columns — using archived_at instead
 
     protected $fillable = [
         'archived_appointment_id', 'original_appointment_id', 'file_path',

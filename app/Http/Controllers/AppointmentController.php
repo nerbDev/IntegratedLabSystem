@@ -118,7 +118,7 @@ class AppointmentController extends Controller
             action: 'Create',
             description: "Patient booked appointment #{$appointment->id} ({$appointment->service}) for {$appointment->first_name} {$appointment->last_name}",
             new: $appointment->toArray(),
-            referenceId: $appointment->id   // ✅ matches $referenceId in the method signature
+            reference_id: $appointment->id   // ✅ matches $referenceId in the method signature
         );
 
         return redirect()->back()->with('success', 'Appointment booked successfully!');
@@ -196,7 +196,7 @@ class AppointmentController extends Controller
             description: "{$this->actorRole()} changed appointment #{$appointment->id} ({$appointment->first_name} {$appointment->last_name}) status from {$oldStatus} to {$request->status}",
             old: $oldData,
             new: $appointment->only(['appointment_date', 'appointment_time', 'status', 'notes']),
-            referenceId: $appointment->id
+            reference_id: $appointment->id
         );
 
         // Notify patient only when status actually changed to one of these three

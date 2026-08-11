@@ -306,7 +306,7 @@
     <h3>Menu</h3>
     <a href="#" class="{{ request()->is('patient/dashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
     <a href="{{ route('appointment.form') }}"><i class="bi bi-calendar-plus"></i> Book Appointment</a>
-    <a href="{{ route('patient.appointments') }}"><i class="bi bi-clock-history"></i> Pending Appointment</a>
+    <a href="{{ route('patient.appointments') }}"><i class="bi bi-clock-history"></i> Appointment List </a>
     <a href="{{ route('patient.results.index') }}" class="{{ request()->routeIs('patient.results.index') ? 'active' : '' }}">
       <i class="bi bi-file-earmark-check"></i> Laboratory Results
     </a>

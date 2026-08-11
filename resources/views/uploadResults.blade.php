@@ -88,8 +88,8 @@
 
                             <div class="col-md-3">
                                 <div class="info-label">Completion Date</div>
-                                <div class="text-white fw-bold">{{ \Carbon\Carbon::parse($app->updated_at)->format('M d, Y') }}</div>
-                                <small class="text-muted">{{ \Carbon\Carbon::parse($app->updated_at)->format('h:i A') }}</small>
+                                <div class="text-white fw-bold">{{ $app->updated_at->format('M d, Y') }}</div>
+                                <small class="text-muted">{{ $app->updated_at->format('h:i A') }}</small>
                             </div>
 
                             <div class="col-md-2 text-md-center">
@@ -114,9 +114,17 @@
                                             <i class="bi bi-paperclip"></i> PDF Attached
                                         </span>
                                     @endif
+                                    @if($app->status == 'released')
+                                        <form method="POST" action="{{ route('admin.archive.now', $app->id) }}" class="d-inline"
+                                            onsubmit="return confirm('Archive this record now? It will move to Archived Records immediately.')">
+                                            @csrf
+                                            <button type="submit" class="btn btn-outline-warning rounded-pill px-4 ms-2">
+                                                <i class="bi bi-archive"></i> Archive Now
+                                            </button>
+                                        </form>
+                                    @endif
                                 @endif
                             </div>
-
                         </div>
                     </div>
                 </div>

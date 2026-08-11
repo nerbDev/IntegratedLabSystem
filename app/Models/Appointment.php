@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Carbon\Carbon;
 
 class Appointment extends Model
 {
@@ -58,5 +60,12 @@ class Appointment extends Model
     public function testResults()
     {
         return $this->hasMany(AppointmentResult::class, 'appointment_id');
+    }
+
+        protected function updatedAt(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => Carbon::parse($value)->timezone('Asia/Manila'),
+        );
     }
 }

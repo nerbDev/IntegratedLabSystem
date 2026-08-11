@@ -176,6 +176,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/archive', [ArchiveController::class, 'index'])->name('admin.archive.index');
 });
 
+Route::post('/admin/appointments/{id}/archive-now', [ArchiveController::class, 'archiveNow'])
+    ->name('admin.archive.now');
+    
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/archive', [ArchiveController::class, 'index'])->name('admin.archive.index');
     Route::get('/admin/archive/{id}/download', [ArchiveController::class, 'download'])->name('admin.archive.download');

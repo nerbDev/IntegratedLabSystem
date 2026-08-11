@@ -77,7 +77,7 @@ class AppointmentResultController extends Controller
             description: "Admin uploaded lab result for {$appointment->first_name} {$appointment->last_name}'s appointment #{$appointment->id}",
             old: ['status' => $oldStatus, 'file_path' => $hadPreviousFile ? $appointment->result->file_path : null],
             new: ['status' => $request->status, 'file_path' => $path],
-            referenceId: $appointment->id
+            reference_id: $appointment->id
         );
 
         return redirect()->back()
@@ -129,7 +129,7 @@ class AppointmentResultController extends Controller
             module: 'Lab Results',
             action: 'Download',
             description: "Patient downloaded lab result file for Appointment #{$appointment->id}",
-            referenceId: $appointment->id
+            reference_id: $appointment->id
         );
 
         return Storage::disk('public')->download($filePath, $downloadName);

@@ -20,6 +20,13 @@ class ReportController extends Controller
         'annually' => ['count' => 5, 'label' => 'Annual'],
     ];
 
+    /**
+     * App's local timezone for calendar-day/week/month/year boundaries.
+     * Used anywhere we need to know what "today" means for Manila-based staff,
+     * regardless of what config('app.timezone') is set to (likely UTC).
+     */
+    protected $localTz = 'Asia/Manila';
+
     public function index(Request $request)
     {
         $filter = $request->query('filter', 'weekly');
@@ -48,10 +55,21 @@ class ReportController extends Controller
             'end'   => 'required|date',
         ]);
 
-        $start = Carbon::parse($request->query('start'))->startOfDay();
-        $end   = Carbon::parse($request->query('end'))->endOfDay();
+        $startDate = $request->query('start');
+        $endDate   = $request->query('end');
 
-        return response()->json($this->buildStats($start, $end));
+        // For DATE-only columns (e.g. appointment_date) — plain calendar-day
+        // comparison, no timezone conversion needed since there's no time component.
+        $start = Carbon::parse($startDate)->startOfDay();
+        $end   = Carbon::parse($endDate)->endOfDay();
+
+        // For DATETIME columns stored in UTC (e.g. created_at) — convert the
+        // intended Manila calendar-day boundaries into their UTC equivalents,
+        // so records near the start/end of the day aren't clipped off.
+        $startUtc = Carbon::parse($startDate, $this->localTz)->startOfDay()->setTimezone('UTC');
+        $endUtc   = Carbon::parse($endDate, $this->localTz)->endOfDay()->setTimezone('UTC');
+
+        return response()->json($this->buildStats($start, $end, $startUtc, $endUtc));
     }
 
     /**
@@ -63,7 +81,8 @@ class ReportController extends Controller
     {
         $config = $this->periodConfig[$filter];
         $count  = $config['count'];
-        $today  = Carbon::today();
+        // Use Manila's calendar day as "today", not the server/app timezone's.
+        $today  = Carbon::now($this->localTz)->startOfDay();
         $periods = [];
 
         for ($i = 0; $i < $count; $i++) {
@@ -117,15 +136,26 @@ class ReportController extends Controller
 
     /**
      * Compute the actual report stats for a single date range.
+     *
+     * $start/$end        -> Manila calendar-day boundaries, used for DATE-only
+     *                        columns like appointment_date (no conversion needed).
+     * $startUtc/$endUtc  -> the same Manila calendar-day boundaries converted to
+     *                        UTC, used for real TIMESTAMP columns like created_at
+     *                        (which Laravel stores in UTC by default).
      */
-    protected function buildStats(Carbon $start, Carbon $end): array
+    protected function buildStats(Carbon $start, Carbon $end, Carbon $startUtc, Carbon $endUtc): array
     {
         $appointmentsQuery = Appointment::whereBetween('appointment_date', [
             $start->toDateString(), $end->toDateString(),
         ]);
 
-        $total     = (clone $appointmentsQuery)->count();
-        $approved  = (clone $appointmentsQuery)->where('status', 'approved')->count();
+        $total    = (clone $appointmentsQuery)->count();
+        // Cumulative: once an appointment is approved, it stays counted here
+        // even after it later moves to 'completed' or 'released' — this tile
+        // tracks "how many were approved this period", not "how many are
+        // currently sitting in Approved status". Add 'rescheduled' to this
+        // list too if a rescheduled appointment should also count as approved.
+        $approved  = (clone $appointmentsQuery)->whereIn('status', ['approved', 'completed', 'released'])->count();
         $pending   = (clone $appointmentsQuery)->where('status', 'pending')->count();
         $cancelled = (clone $appointmentsQuery)->where('status', 'cancelled')->count();
         $completed = (clone $appointmentsQuery)->where('status', 'completed')->count();
@@ -149,8 +179,10 @@ class ReportController extends Controller
         $unprocessed = $approved - $processedCount;
         $unprocessed = $unprocessed > 0 ? $unprocessed : 0;
 
+        // created_at is a real timestamp stored in UTC -> use the UTC-converted
+        // boundaries here, not the plain Manila-day ones.
         $newPatients = Useraccount::where('role', 'patient')
-            ->whereBetween('created_at', [$start, $end])
+            ->whereBetween('created_at', [$startUtc, $endUtc])
             ->count();
 
         $patientIdsInRange = (clone $appointmentsQuery)->pluck('patient_id')->unique();

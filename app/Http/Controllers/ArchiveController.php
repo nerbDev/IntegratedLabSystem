@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use App\Models\ArchivedAppointment;
+use App\Services\AppointmentArchiver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -80,5 +81,30 @@ class ArchiveController extends Controller
         });
 
         return redirect()->back()->with('success', 'Appointment restored successfully.');
+    }
+
+    /**
+     * Manually archive a single appointment right now, instead of waiting
+     * for the 7-day auto-archive command to pick it up. Uses the same
+     * AppointmentArchiver service as the scheduled job, so the resulting
+     * archive record is identical either way.
+     *
+     * Restricted to 'released' appointments to match what the auto-archive
+     * job would eventually archive on its own — adjust the status check
+     * below if instant archiving should also be allowed from other statuses.
+     */
+    public function archiveNow($id)
+    {
+        $appointment = Appointment::with('result')->findOrFail($id);
+
+        if ($appointment->status !== 'released') {
+            return redirect()->back()->with('error', 'Only released appointments can be archived.');
+        }
+
+        $description = "Admin manually archived appointment #{$appointment->id} ({$appointment->first_name} {$appointment->last_name}) before the 7-day auto-archive window";
+
+        AppointmentArchiver::archive($appointment, $description);
+
+        return redirect()->back()->with('success', 'Appointment archived successfully.');
     }
 }

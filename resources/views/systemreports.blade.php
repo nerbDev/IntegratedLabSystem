@@ -90,10 +90,14 @@
         display: flex; align-items: center; gap: 7px; white-space: nowrap;
     }
     .btn-generate:hover { background: #00d4ff; color: #000; }
+    /* NOTE: "done" is now a visual-only state — it no longer disables the
+       button (pointer-events removed) so clicking it again re-fetches
+       fresh data instead of just toggling the panel open/closed. */
     .btn-generate.done {
         background: rgba(0,255,150,0.1); border-color: rgba(0,255,150,0.3);
-        color: #00ff96; pointer-events: none;
+        color: #00ff96;
     }
+    .btn-generate.done:hover { background: #00ff96; color: #000; }
     .btn-generate.loading { opacity: 0.6; pointer-events: none; }
 
     .btn-eye {
@@ -266,6 +270,9 @@
     let othersHidden = false;
 
     // ── Generate Report ──
+    // Always re-fetches from the server on click — even if this card was
+    // already generated before. This ensures newly booked appointments,
+    // new patients, etc. show up without requiring a full page reload.
     function generateReport(e, idx, start, end) {
         e.stopPropagation();
 
@@ -274,12 +281,8 @@
         const body     = document.getElementById('body-' + idx);
         const ph       = document.getElementById('placeholder-' + idx);
 
-        if (generated[idx]) {
-            body.classList.toggle('open');
-            return Promise.resolve();
-        }
-
         body.classList.add('open');
+        btn.classList.remove('done');
         btn.classList.add('loading');
         btn.innerHTML = '<span class="rp-spinner"></span> Compiling…';
         ph.innerHTML  = '<i class="bi bi-hourglass-split" style="color:#00d4ff;font-size:1.6rem;display:block;margin-bottom:8px;"></i><span style="color:rgba(255,255,255,0.35);font-size:0.8rem;">Fetching data…</span>';
@@ -291,7 +294,7 @@
                 renderReport(idx, data);
                 btn.classList.remove('loading');
                 btn.classList.add('done');
-                btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Report Ready';
+                btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh Report';
                 printBtn.removeAttribute('disabled');
                 generated[idx] = true;
             })

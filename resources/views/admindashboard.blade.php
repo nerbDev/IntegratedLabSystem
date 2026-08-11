@@ -228,7 +228,7 @@
     <i class="bi bi-clipboard2-pulse me-2"></i> Weekly Reports
 </a>
       <a href="{{ route('admin.appointments.index') }}">
-          <i class="bi bi-calendar-event"></i> Pending Requests
+          <i class="bi bi-calendar-event"></i> Appointment Schedule
 </a>
 <a href="{{ route('admin.activityLogs.index') }}" 
    class="{{ request()->routeIs('activityLogs.index') ? 'active' : '' }}">
