@@ -12,7 +12,12 @@ class SocialAuthController extends Controller
 {
     public function redirect(string $provider): RedirectResponse
     {
-        return Socialite::driver($provider)->stateless()->redirect();
+        $scopes = $provider === 'facebook' ? ['email'] : [];
+
+        return Socialite::driver($provider)
+            ->stateless()
+            ->scopes($scopes)
+            ->redirect();
     }
 
     public function callback(string $provider): RedirectResponse
@@ -77,7 +82,7 @@ class SocialAuthController extends Controller
             return $this->redirectByRole($user);
         }
 
-        return view('complete-profile', compact('user'));
+        return view('CompleteProfile', compact('user'));
     }
 
     public function completeProfile(Request $request): RedirectResponse

@@ -386,7 +386,7 @@
     </div>
 
     {{-- ================= RECENT ACTIVITY (unchanged) ================= --}}
-    <div class="row">
+    {{-- <div class="row">
         <div class="col-md-12">
             <div class="card-dashboard">
                 <h5>Recent Activity</h5>
@@ -408,7 +408,7 @@
                 </table>
             </div>
         </div>
-    </div>
+    </div> --}}
   </div>
 </div>
 

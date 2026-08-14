@@ -9,6 +9,45 @@ use Illuminate\Support\Facades\Auth;
 
 class PatientController extends Controller
 {
+    // ------------------------------------------------------------
+    // Print: full patient list (clean, no glass/shadow styling)
+    // ------------------------------------------------------------
+    public function printList()
+    {
+        $patients = UserAccount::where('role', 'patient')
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+
+        ActivityLogger::log(
+            module: 'Patients',
+            action: 'Print',
+            description: 'Admin printed the full patient list',
+        );
+
+        return view('Print-patients-list', compact('patients'));
+    }
+
+    // ------------------------------------------------------------
+    // Print: single patient profile + their lab records
+    // ------------------------------------------------------------
+    public function printPatient($id)
+    {
+        $patient = UserAccount::with(['appointments' => function ($query) {
+            $query->with('result')
+                  ->orderBy('appointment_date', 'desc')
+                  ->orderBy('appointment_time', 'desc');
+        }])->findOrFail($id);
+
+        ActivityLogger::log(
+            module: 'Patients',
+            action: 'Print',
+            description: "Admin printed lab records for {$patient->first_name} {$patient->last_name}",
+            reference_id: $patient->id
+        );
+
+        return view('Print-patient-record', compact('patient'));
+    }
     // Render list of accounts filtered exclusively to 'patient' role profiles
     public function index()
     {

@@ -15,6 +15,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffProfileController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 
 
 // ------------------------------
@@ -32,6 +33,9 @@ Route::get('/login', [AccountController::class, 'showAuth'])->name('login.regist
 Route::post('/login', [AccountController::class, 'login'])->name('login.submit');
 Route::post('/register', [AccountController::class, 'register'])->name('register.submit');
 
+// route for "create account" - admin side
+Route::post('/admin/user-accounts', [AccountController::class, 'adminUserAccountsStore'])
+    ->name('admin.users.store');
 
 //google account redirect
 Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])
@@ -60,7 +64,12 @@ Route::post('/complete-profile', [SocialAuthController::class, 'completeProfile'
 
         Route::middleware(['role:patient'])->group(function () {
             Route::get('/patientdashboard', [AccountController::class, 'patientDashboard'])->name('patientdashboard');
+            Route::patch('/appointments/{id}/cancel', [AppointmentController::class, 'patientCancel'])
+                ->name('patient.appointments.cancel');
+            Route::patch('/appointments/{id}/reschedule-response', [AppointmentController::class, 'patientRespondReschedule'])
+                ->name('patient.appointments.reschedule-response');
         });
+        
 
     });
 
@@ -146,6 +155,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     // Patient Management Directorial Core Systems Maps
     Route::get('/patient-details', [PatientController::class, 'index'])->name('patients.index');
+    Route::get('/patient-details/print-list', [PatientController::class, 'printList'])->name('patients.print-list');
+    Route::get('/patient-details/{id}/print', [PatientController::class, 'printPatient'])->name('patients.print');
     Route::get('/patient-details/{id}', [PatientController::class, 'show'])->name('patients.show');
     Route::put('/patient-details/{id}', [PatientController::class, 'update'])->name('patients.update');
     Route::delete('/patient-details/{id}', [PatientController::class, 'destroy'])->name('patients.destroy');
@@ -263,3 +274,27 @@ Route::get('/patient/transactions', [TransactionController::class, 'patientTrans
 Route::get('/admin/my-transactions', [TransactionController::class, 'adminTransactions'])
     ->name('admin.transactions');
  
+
+    Route::get('/forgot-password', [ForgotPasswordController::class, 'showForgotForm'])
+    ->name('password.forgot-form');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendOtp'])
+    ->name('password.send-otp');
+ 
+Route::get('/forgot-password/verify-otp', [ForgotPasswordController::class, 'showVerifyForm'])
+    ->name('password.verify-otp.form');
+Route::post('/forgot-password/verify-otp', [ForgotPasswordController::class, 'verifyOtp'])
+    ->name('password.verify-otp');
+ 
+Route::get('/forgot-password/reset', [ForgotPasswordController::class, 'showResetForm'])
+    ->name('password.reset-form');
+Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPassword'])
+    ->name('password.reset');
+ 
+
+//route for the admin to print patient list
+Route::get('/admin/patient-details/print-list', [PatientController::class, 'printList'])
+    ->name('admin.patients.print-list');
+    
+//route for the admin to print specific patient 
+Route::get('/admin/patient-details/{id}/print', [PatientController::class, 'printPatient'])
+    ->name('admin.patients.print');

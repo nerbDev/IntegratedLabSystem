@@ -92,9 +92,30 @@
             <h5 class="text-white mt-3">No profiles matched patient user classification matrices</h5>
         </div>
     @else
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0" style="border: 1px solid rgba(255,255,255,0.08); color: rgba(0,212,255,0.8);">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" id="patientSearchInput" class="form-control border-start-0"
+                           placeholder="Search by name, email, or phone..."
+                           style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-left: none; color: white;"
+                           onkeyup="filterPatientRecords()">
+                </div>
+            </div>
+            <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                <a href="{{ route('admin.patients.print-list') }}" target="_blank"
+                   class="btn btn-outline-info rounded-pill px-4">
+                    <i class="bi bi-printer-fill me-1"></i> Print Patient List
+                </a>
+            </div>
+        </div>
+
         <div class="row">
             @foreach($patients as $user)
-                <div class="col-12">
+                <div class="col-12 patient-record-row"
+                     data-search="{{ strtolower($user->first_name . ' ' . $user->middle_name . ' ' . $user->last_name . ' ' . $user->email . ' ' . $user->phone_number) }}">
                     <div class="patient-card">
                         <div class="row align-items-center">
                             <div class="col-md-1 d-flex justify-content-md-center mb-3 mb-md-0">
@@ -120,6 +141,10 @@
                             </div>
                             <div class="col-md-2 text-md-end">
                                 <div class="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
+                                    <a href="{{ route('admin.patients.print', $user->id) }}" target="_blank"
+                                       class="btn btn-outline-info rounded-pill btn-sm px-3" title="Print this patient's record">
+                                        <i class="bi bi-printer-fill"></i>
+                                    </a>
                                     <button class="btn btn-info rounded-pill px-4 fw-bold text-dark btn-sm" onclick="loadPatientRegistryFile({{ $user->id }})">
                                         Open File
                                     </button>
@@ -136,6 +161,11 @@
                     </div>
                 </div>
             @endforeach
+        </div>
+
+        <div id="noPatientSearchResults" class="text-center py-5" style="display:none;">
+            <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+            <h6 class="text-white mt-3">No matching patient records found</h6>
         </div>
     @endif
 </div>
@@ -316,6 +346,23 @@
                 new bootstrap.Modal(document.getElementById('patientFileModal')).show();
             })
             .catch(error => alert('Clinical engine encountered processing anomalies parsing profile arrays.'));
+    }
+
+    function filterPatientRecords() {
+        const query = document.getElementById('patientSearchInput').value.toLowerCase().trim();
+        const rows = document.querySelectorAll('.patient-record-row');
+        let visibleCount = 0;
+
+        rows.forEach(function (row) {
+            const matches = row.dataset.search.includes(query);
+            row.style.display = matches ? '' : 'none';
+            if (matches) visibleCount++;
+        });
+
+        const noResults = document.getElementById('noPatientSearchResults');
+        if (noResults) {
+            noResults.style.display = (visibleCount === 0 && query !== '') ? 'block' : 'none';
+        }
     }
 </script>
 @endsection

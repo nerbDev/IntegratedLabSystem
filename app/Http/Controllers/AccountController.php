@@ -12,6 +12,32 @@ use App\Models\UnavailableDate;
 
 class AccountController extends Controller
 {
+    // Create a new account from the admin User Account Registry
+    public function adminUserAccountsStore(Request $request)
+    {
+        $validated = $request->validate([
+            'role'            => 'required|in:patient,staff,admin',
+            'first_name'      => 'required|string|max:255',
+            'middle_name'     => 'nullable|string|max:255',
+            'last_name'       => 'required|string|max:255',
+            'date_of_birth'   => 'required|date',
+            'sex'             => 'required|in:male,female',
+            'email'           => 'required|email|unique:useraccount,email',
+            'phone_number'    => 'required|string|max:20',
+            'Umunicipality'   => 'required|string|max:255',
+            'Ubarangay'       => 'required|string|max:255',
+            'Ustreet_house'   => 'required|string|max:255',
+            'contact_person'  => 'required|string|max:255',
+            'contact_number'  => 'required|string|max:20',
+            'password'        => 'required|string|min:6|confirmed',
+        ]);
+
+        $validated['password'] = Hash::make($validated['password']);
+
+        UserAccount::create($validated);
+
+        return redirect()->back()->with('success', 'New account created successfully.');
+    }
     // ------------------------------
     // Show Login / Register Page
     // ------------------------------

@@ -148,6 +148,47 @@
                                 </p>
                             </div>
                         @endif
+
+                                                @if($app->status == 'pending')
+                            <div class="text-md-end mt-3">
+                                <form action="{{ route('patient.appointments.cancel', $app->id) }}" method="POST" class="d-inline"
+                                    onsubmit="return confirm('Cancel this appointment request?');">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                                        <i class="bi bi-x-circle me-1"></i> Cancel Request
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
+
+                        @if($app->status == 'rescheduled')
+                            <div class="staff-note-box mt-3" style="border-left-color:#0dcaf0;">
+                                <div class="info-label text-info mb-2">
+                                    <i class="bi bi-arrow-repeat me-2"></i>Staff proposed a new schedule — please confirm below
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <form action="{{ route('patient.appointments.reschedule-response', $app->id) }}" method="POST"
+                                        onsubmit="return confirm('Accept this new schedule?');">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="decision" value="accept">
+                                        <button type="submit" class="btn btn-success btn-sm rounded-pill px-3">
+                                            <i class="bi bi-check-circle me-1"></i> Accept
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('patient.appointments.reschedule-response', $app->id) }}" method="POST"
+                                        onsubmit="return confirm('Reject this rescheduled date? Your appointment will be cancelled.');">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="decision" value="reject">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                                            <i class="bi bi-x-circle me-1"></i> Reject
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endforeach

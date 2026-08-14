@@ -15,6 +15,71 @@ use App\Models\UserAccount;
 
 class AppointmentController extends Controller
 {
+        /**
+     * Patient: Cancel their own appointment while it's still pending
+     */
+    public function patientCancel(Request $request, $id)
+    {
+        $appointment = Appointment::where('id', $id)
+                        ->where('patient_id', Auth::id())
+                        ->firstOrFail();
+
+        if ($appointment->status !== 'pending') {
+            abort(403, 'This appointment can no longer be cancelled directly.');
+        }
+
+        $oldData = $appointment->only(['status']);
+        $appointment->update(['status' => 'cancelled']);
+
+        ActivityLogger::log(
+            module: 'Appointments',
+            action: 'Update',
+            description: "Patient cancelled their own appointment #{$appointment->id} ({$appointment->service})",
+            old: $oldData,
+            new: $appointment->only(['status']),
+            reference_id: $appointment->id
+        );
+
+        return redirect()->back()->with('success', 'Your appointment request has been cancelled.');
+    }
+
+    /**
+     * Patient: Accept or reject a rescheduled appointment
+     */
+    public function patientRespondReschedule(Request $request, $id)
+    {
+        $request->validate([
+            'decision' => 'required|in:accept,reject',
+        ]);
+
+        $appointment = Appointment::where('id', $id)
+                        ->where('patient_id', Auth::id())
+                        ->firstOrFail();
+
+        if ($appointment->status !== 'rescheduled') {
+            abort(403, 'This appointment is not awaiting a reschedule response.');
+        }
+
+        $oldData = $appointment->only(['status']);
+        $newStatus = $request->decision === 'accept' ? 'approved' : 'cancelled';
+        $appointment->update(['status' => $newStatus]);
+
+        ActivityLogger::log(
+            module: 'Appointments',
+            action: 'Update',
+            description: 'Patient ' . ($request->decision === 'accept' ? 'accepted' : 'rejected')
+                        . " the rescheduled date for appointment #{$appointment->id}",
+            old: $oldData,
+            new: $appointment->only(['status']),
+            reference_id: $appointment->id
+        );
+
+        $message = $request->decision === 'accept'
+            ? 'You have accepted the new schedule.'
+            : 'You have rejected the rescheduled appointment and it has been cancelled.';
+
+        return redirect()->back()->with('success', $message);
+    }
     /**
      * Fetch taken slots for a specific date (AJAX)
      */

@@ -317,7 +317,7 @@
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <div class="collapse navbar-collapse" id="navbarNav">
+     <div class="collapse navbar-collapse" id="navbarNav">
       <div class="ms-auto d-flex align-items-center gap-3">
         <a class="nav-link" href="#home"     data-section="home">Home</a>
         <a class="nav-link" href="#about"    data-section="about">About</a>
@@ -326,6 +326,8 @@
         <a href="/login" class="btn btn-glass">Log In</a>
       </div>
     </div>
+
+    
   </div>
 </nav>
 

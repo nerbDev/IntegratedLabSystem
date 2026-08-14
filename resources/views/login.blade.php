@@ -162,6 +162,11 @@
           <div class="mb-3">
             <label for="login_password">Password</label>
             <input type="password" id="login_password" name="password" class="form-control" required>
+            <div class="text-end mt-1">
+              <a href="{{ route('password.forgot-form') }}" class="small" style="color: rgba(255,255,255,0.85);">
+                Forgot password?
+              </a>
+            </div>
           </div>
           <button type="submit" class="btn btn-primary w-100 mt-2">Log In</button>
         </form>
