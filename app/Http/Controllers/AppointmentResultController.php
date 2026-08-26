@@ -43,11 +43,11 @@ class AppointmentResultController extends Controller
 
         // Delete old file if one already exists for this appointment
         if ($hadPreviousFile) {
-            Storage::disk('public')->delete($appointment->result->file_path);
+            Storage::disk('supabase')->delete($appointment->result->file_path);
         }
 
         // Store the uploaded PDF
-        $path = $request->file('lab_file')->store('medical_records', 'public');
+        $path = $request->file('lab_file')->store('medical_records', 'supabase');
 
         // Save or update the result record
         AppointmentResult::updateOrCreate(
@@ -118,7 +118,7 @@ class AppointmentResultController extends Controller
 
         $filePath = $appointment->result->file_path;
 
-        if (!Storage::disk('public')->exists($filePath)) {
+        if (!Storage::disk('supabase')->exists($filePath)) {
             return redirect()->back()->with('error', 'The requested file does not exist on our servers.');
         }
 
@@ -132,6 +132,12 @@ class AppointmentResultController extends Controller
             reference_id: $appointment->id
         );
 
-        return Storage::disk('public')->download($filePath, $downloadName);
+        $url = Storage::disk('supabase')->temporaryUrl(
+            $filePath,
+            now()->addMinutes(5),
+            ['ResponseContentDisposition' => 'attachment; filename="' . $downloadName . '"']
+        );
+
+        return redirect($url);
     }
 }

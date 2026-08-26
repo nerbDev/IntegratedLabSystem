@@ -205,8 +205,6 @@
                 <label>Account Role</label>
                 <select name="role" class="form-select" required>
                   <option value="patient">Patient</option>
-                  <option value="staff">Staff</option>
-                  <option value="admin">Admin</option>
                 </select>
               </div>
 

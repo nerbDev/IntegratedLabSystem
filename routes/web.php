@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AppointmentResultController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffProfileController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+
 
 
 // ------------------------------
@@ -298,3 +300,21 @@ Route::get('/admin/patient-details/print-list', [PatientController::class, 'prin
 //route for the admin to print specific patient 
 Route::get('/admin/patient-details/{id}/print', [PatientController::class, 'printPatient'])
     ->name('admin.patients.print');
+
+Route::get('/cron/run-tasks/{secret}', function ($secret) {
+    if ($secret !== config('app.cron_secret')) {
+        abort(403);
+    }
+
+    Artisan::call('queue:work', ['--stop-when-empty' => true]);
+    $queueOutput = Artisan::output();
+
+    Artisan::call('archive:released-appointments'); // ⚠️ confirm this matches your actual command signature
+    $archiveOutput = Artisan::output();
+
+    return response()->json([
+        'queue' => trim($queueOutput),
+        'archive' => trim($archiveOutput),
+        'ran_at' => now()->toDateTimeString(),
+    ]);
+});
