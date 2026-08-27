@@ -21,15 +21,17 @@ class SocialAuthController extends Controller
             ->redirect();
     }
 
-    public function callback(string $provider): RedirectResponse
-    {
-        try {
-            $socialUser = Socialite::driver($provider)->stateless()->user();
-        } catch (Throwable $e) {
-            // Catches Facebook crawler hits, invalid state tokens, or cancelled logins
-            return redirect()->route('login.register')
-                ->with('login_error', 'Authentication failed or was cancelled. Please try again.');
-        }
+        public function callback(string $provider): RedirectResponse
+        {
+            try {
+                $socialUser = Socialite::driver($provider)->stateless()->user();
+            } catch (\Throwable $e) {
+                // Log the exact error to storage/logs/laravel.log
+                \Illuminate\Support\Facades\Log::error("{$provider} Login Error: " . $e->getMessage());
+
+                return redirect()->route('login.register')
+                    ->with('login_error', 'Authentication failed or was cancelled. Please try again.');
+            }
 
         $email = $socialUser->getEmail();
 

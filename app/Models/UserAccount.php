@@ -14,8 +14,10 @@ class UserAccount extends Authenticatable
     // Table name (optional, Laravel would guess 'useraccounts' otherwise)
     protected $table = 'useraccount';
 
+    protected $primaryKey = 'id';
     /**
      * The attributes that are mass assignable.
+    
      */
     protected $fillable = [
         'role',

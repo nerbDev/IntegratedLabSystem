@@ -17,18 +17,18 @@ class AppServiceProvider extends ServiceProvider
         //
     }
 
-
-
+    /**
+     * Bootstrap any application services.
+     */
     public function boot(): void
     {
         Notification::extend('brevo', function ($app) {
             return $app->make(BrevoChannel::class);
         });
 
-    {
-        if (config('app.env') === 'production' || request()->header('X-Forwarded-Proto') === 'https') {
+        // Force HTTPS unconditionally on Render or whenever running in production
+        if ($this->app->environment('production') || request()->server->get('HTTP_X_FORWARDED_PROTO') === 'https') {
             URL::forceScheme('https');
         }
-    }
     }
 }
