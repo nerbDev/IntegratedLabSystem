@@ -19,7 +19,6 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 
 
-
 // ------------------------------
 // Public Landing Page
 // ------------------------------
@@ -39,41 +38,43 @@ Route::post('/register', [AccountController::class, 'register'])->name('register
 Route::post('/admin/user-accounts', [AccountController::class, 'adminUserAccountsStore'])
     ->name('admin.users.store');
 
-//google account redirect
+// google account redirect
 Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])
     ->name('social.redirect')
     ->whereIn('provider', ['google', 'facebook']);
 
+// FIXED: Added missing route name here
 Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])
+    ->name('social.callback')
     ->whereIn('provider', ['google', 'facebook']);
 
 Route::get('/complete-profile', [SocialAuthController::class, 'showCompleteProfile'])
     ->middleware('auth')->name('profile.complete');
 Route::post('/complete-profile', [SocialAuthController::class, 'completeProfile'])
     ->middleware('auth')->name('profile.complete.submit');
+
 // ------------------------------
 // Protected Routes (Dashboards)
 // ------------------------------
-    Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth'])->group(function () {
 
-        Route::middleware(['role:admin'])->group(function () {
-            Route::get('/admindashboard', [AccountController::class, 'dashboard'])->name('admindashboard');
-        });
-
-        Route::middleware(['role:staff'])->group(function () {
-            Route::get('/staffdashboard', [AccountController::class, 'staffDashboard'])->name('staffdashboard');
-        });
-
-        Route::middleware(['role:patient'])->group(function () {
-            Route::get('/patientdashboard', [AccountController::class, 'patientDashboard'])->name('patientdashboard');
-            Route::patch('/appointments/{id}/cancel', [AppointmentController::class, 'patientCancel'])
-                ->name('patient.appointments.cancel');
-            Route::patch('/appointments/{id}/reschedule-response', [AppointmentController::class, 'patientRespondReschedule'])
-                ->name('patient.appointments.reschedule-response');
-        });
-        
-
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/admindashboard', [AccountController::class, 'dashboard'])->name('admindashboard');
     });
+
+    Route::middleware(['role:staff'])->group(function () {
+        Route::get('/staffdashboard', [AccountController::class, 'staffDashboard'])->name('staffdashboard');
+    });
+
+    Route::middleware(['role:patient'])->group(function () {
+        Route::get('/patientdashboard', [AccountController::class, 'patientDashboard'])->name('patientdashboard');
+        Route::patch('/appointments/{id}/cancel', [AppointmentController::class, 'patientCancel'])
+            ->name('patient.appointments.cancel');
+        Route::patch('/appointments/{id}/reschedule-response', [AppointmentController::class, 'patientRespondReschedule'])
+            ->name('patient.appointments.reschedule-response');
+    });
+
+});
 
 
 // ------------------------------
@@ -136,21 +137,19 @@ Route::get('/patient/results', [AppointmentResultController::class, 'patientResu
 Route::get('/patient/result/download/{id}', [AppointmentResultController::class, 'download'])
     ->name('patient.result.download');
 
-    // Standalone blank builder (no appointment pre-filled)
+// Standalone blank builder (no appointment pre-filled)
 Route::get('/admin/lab-result/create', [LabResultController::class, 'create'])
     ->name('admin.lab-result.create');
- 
+
 // Builder pre-filled from a specific appointment
-// Link to this from your uploadResult blade "Upload File" button
 Route::get('/admin/lab-result/{appointment}', [LabResultController::class, 'builder'])
     ->name('admin.lab-result.builder');
 
 // Protects the group using your parameterized RoleMiddleware
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    
     // User Account Directory Management Panel Routes
     Route::get('/user-accounts', [AccountController::class, 'adminUserAccountsIndex'])->name('users.index');
-   Route::put('/user-accounts/{id}', [AccountController::class, 'adminUserAccountsUpdate'])->name('users.update');
+    Route::put('/user-accounts/{id}', [AccountController::class, 'adminUserAccountsUpdate'])->name('users.update');
     Route::delete('/user-accounts/{id}', [AccountController::class, 'adminUserAccountsDestroy'])->name('users.destroy');
 });
 
@@ -165,13 +164,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 });
 
 
-//for the admin the view activity logs
+// for the admin the view activity logs
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('admin.activityLogs.index');
 });
 
 
-//for the admin to view activitylogs\timeline
+// for the admin to view activitylogs\timeline
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/appointments/{id}/timeline', [AppointmentController::class, 'timeline'])
         ->name('admin.appointments.timeline');
@@ -191,28 +190,28 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
 Route::post('/admin/appointments/{id}/archive-now', [ArchiveController::class, 'archiveNow'])
     ->name('admin.archive.now');
-    
+
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/archive', [ArchiveController::class, 'index'])->name('admin.archive.index');
     Route::get('/admin/archive/{id}/download', [ArchiveController::class, 'download'])->name('admin.archive.download');
 });
 
 Route::post('/admin/archive/{id}/restore', [ArchiveController::class, 'restore'])->name('admin.archive.restore');
- 
+
 // Staff: System Reports
 Route::middleware(['auth', 'role:staff'])->group(function () {
     Route::get('/staff/reports', [StaffReportController::class, 'index'])
         ->name('staff.reports.index');
- 
+
     Route::get('/staff/reports/generate', [StaffReportController::class, 'generate'])
         ->name('staff.reports.generate');
 });
- 
+
 // Admin: System Reports
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/reports', [ReportController::class, 'index'])
         ->name('admin.reports.index');
- 
+
     Route::get('/admin/reports/generate', [ReportController::class, 'generate'])
         ->name('admin.reports.generate');
 });
@@ -221,30 +220,29 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 Route::get('/staff/appointments/approved', [AppointmentController::class, 'approvedSchedule'])
     ->name('staff.appointments.approved');
 
- 
 
 // Add Promo
 Route::get('/staff/settings/promo', [SettingsController::class, 'promoIndex'])->name('staff.settings.promo');
 Route::post('/staff/settings/promo', [SettingsController::class, 'promoStore'])->name('staff.settings.promo.store');
 Route::put('/staff/settings/promo/{package}', [SettingsController::class, 'promoUpdate'])->name('staff.settings.promo.update');
 Route::delete('/staff/settings/promo/{package}', [SettingsController::class, 'promoDestroy'])->name('staff.settings.promo.destroy');
- 
+
 // Add Package Type (individual services)
 Route::get('/staff/settings/services', [SettingsController::class, 'serviceIndex'])->name('staff.settings.package');
 Route::post('/staff/settings/services', [SettingsController::class, 'serviceStore'])->name('staff.settings.package.store');
 Route::put('/staff/settings/services/{service}', [SettingsController::class, 'serviceUpdate'])->name('staff.settings.package.update');
 Route::delete('/staff/settings/services/{service}', [SettingsController::class, 'serviceDestroy'])->name('staff.settings.package.destroy');
- 
+
 // Modify Price
 Route::get('/staff/settings/price', [SettingsController::class, 'priceIndex'])->name('staff.settings.price');
 Route::put('/staff/settings/price/package/{package}', [SettingsController::class, 'priceUpdatePackage'])->name('staff.settings.price.package');
 Route::put('/staff/settings/price/service/{service}', [SettingsController::class, 'priceUpdateService'])->name('staff.settings.price.service');
- 
+
 // Block Unavailable Days
 Route::get('/staff/settings/unavailable', [SettingsController::class, 'unavailableIndex'])->name('staff.settings.unavailable');
 Route::post('/staff/settings/unavailable', [SettingsController::class, 'unavailableStore'])->name('staff.settings.unavailable.store');
 Route::delete('/staff/settings/unavailable/{unavailableDate}', [SettingsController::class, 'unavailableDestroy'])->name('staff.settings.unavailable.destroy');
- 
+
 // Public — feeds the patient booking form (no auth needed, it's read-only)
 Route::get('/booking-data', [AppointmentController::class, 'bookingData'])->name('booking.data');
 
@@ -257,47 +255,47 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
 });
 
 
-// for the patient to view and  edit profile
+// for the patient to view and edit profile
 Route::middleware('auth')->group(function () {
     Route::get('/patient/PSaccount-setting', [AccountController::class, 'patientAccountSettingShow'])->name('patient.accountsetting');
     Route::put('/patient/PSaccount-setting', [AccountController::class, 'patientAccountSettingUpdate'])->name('patient.accountsetting.update');
     Route::put('/patient/account-setting/password', [AccountController::class, 'patientPasswordUpdate'])->name('patient.accountsetting.password');
 });
 
-// --- Staff group (wherever 'staffdashboard' / 'appointments.requests' are defined) ---
+// --- Staff group ---
 Route::get('/staff/transactions', [TransactionController::class, 'staffTransactions'])
     ->name('staff.transactions');
- 
-// --- Patient group (wherever 'patient.appointments' is defined) ---
+
+// --- Patient group ---
 Route::get('/patient/transactions', [TransactionController::class, 'patientTransactions'])
     ->name('patient.transactions');
- 
-// --- Admin group (wherever your admin-only routes are defined) ---
+
+// --- Admin group ---
 Route::get('/admin/my-transactions', [TransactionController::class, 'adminTransactions'])
     ->name('admin.transactions');
- 
 
-    Route::get('/forgot-password', [ForgotPasswordController::class, 'showForgotForm'])
+
+Route::get('/forgot-password', [ForgotPasswordController::class, 'showForgotForm'])
     ->name('password.forgot-form');
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendOtp'])
     ->name('password.send-otp');
- 
+
 Route::get('/forgot-password/verify-otp', [ForgotPasswordController::class, 'showVerifyForm'])
     ->name('password.verify-otp.form');
 Route::post('/forgot-password/verify-otp', [ForgotPasswordController::class, 'verifyOtp'])
     ->name('password.verify-otp');
- 
+
 Route::get('/forgot-password/reset', [ForgotPasswordController::class, 'showResetForm'])
     ->name('password.reset-form');
 Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPassword'])
     ->name('password.reset');
- 
 
-//route for the admin to print patient list
+
+// route for the admin to print patient list
 Route::get('/admin/patient-details/print-list', [PatientController::class, 'printList'])
     ->name('admin.patients.print-list');
-    
-//route for the admin to print specific patient 
+
+// route for the admin to print specific patient 
 Route::get('/admin/patient-details/{id}/print', [PatientController::class, 'printPatient'])
     ->name('admin.patients.print');
 
@@ -309,7 +307,7 @@ Route::get('/cron/run-tasks/{secret}', function ($secret) {
     Artisan::call('queue:work', ['--stop-when-empty' => true]);
     $queueOutput = Artisan::output();
 
-    Artisan::call('archive:released-appointments'); // ⚠️ confirm this matches your actual command signature
+    Artisan::call('archive:released-appointments');
     $archiveOutput = Artisan::output();
 
     return response()->json([
