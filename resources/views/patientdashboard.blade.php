@@ -164,9 +164,7 @@
         transform-style: preserve-3d;
     }
 
-    /* fixed staircase slots — box 1 top-left (largest visual priority),
-       box 2 offset down-right, box 3 further down-right, corner touching
-       the container's bottom-right edge, all three fully on-screen */
+    /* fixed staircase slots — box 1 top-left, box 2 offset, box 3 bottom-right */
     .stack-card[data-order="0"] { top: 0%;   left: 0%;   z-index: 12; filter: brightness(1); }
     .stack-card[data-order="1"] { top: 23%;  left: 20%;  z-index: 11; filter: brightness(0.88); }
     .stack-card[data-order="2"] { top: 46%;  left: 40%;  z-index: 10; filter: brightness(0.78); }
@@ -292,7 +290,12 @@
     <img src="{{ asset('images/SMHLogo.png') }}" alt="Logo">
     <span class="logo-text">Subic Med Health</span>
   </div>
-  <div class="welcome-text">Welcome, {{ auth()->user()->first_name ?? 'Patient' }} 👋</div>
+  
+  {{-- Safe fallback for first name rendering --}}
+  <div class="welcome-text">
+    Welcome, {{ auth()->check() ? (auth()->user()->first_name ?? 'Patient') : 'Patient' }} 👋
+  </div>
+
   <div class="profile-section">
       <form action="{{ route('logout') }}" method="POST" style="display:inline;">
           @csrf
@@ -304,20 +307,33 @@
 <div class="main-content">
   <div class="sidebar" id="sidebar">
     <h3>Menu</h3>
-    <a href="#" class="{{ request()->is('patient/dashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="#" class="{{ request()->is('patient/dashboard') || request()->is('patientdashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i> Dashboard</a>
     <a href="{{ route('appointment.form') }}"><i class="bi bi-calendar-plus"></i> Book Appointment</a>
     <a href="{{ route('patient.appointments') }}"><i class="bi bi-clock-history"></i> Appointment List </a>
     <a href="{{ route('patient.results.index') }}" class="{{ request()->routeIs('patient.results.index') ? 'active' : '' }}">
       <i class="bi bi-file-earmark-check"></i> Laboratory Results
     </a>
-      <a href="{{ route('patient.transactions') }}" class="{{ request()->routeIs('patient.transactions') ? 'active' : '' }}">
-        <i class="bi bi-clock-history me-2"></i> My Transactions
-      </a>
+    <a href="{{ route('patient.transactions') }}" class="{{ request()->routeIs('patient.transactions') ? 'active' : '' }}">
+      <i class="bi bi-clock-history me-2"></i> My Transactions
+    </a>
     <a href="{{ route('patient.accountsetting') }}" class="nav-link {{ Request::routeIs('patient.accountsetting') ? 'active' : '' }}"> <i class="bi bi-person-badge"></i> Account Setting</a>
   </div> 
 
   <div class="content-area">
     @yield('content')
+
+    {{-- Alert notice if the profile is still missing required patient information --}}
+    @if(auth()->check() && !\App\Http\Controllers\Auth\SocialAuthController::profileIsComplete(auth()->user()))
+        <div class="alert alert-warning border-0 shadow-sm mb-4" role="alert" style="background: rgba(255, 193, 7, 0.2); color: #fff; backdrop-filter: blur(10px);">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                    <strong>Action Required:</strong> Please complete your profile details to unlock full appointment booking capabilities.
+                </div>
+                <a href="{{ route('profile.complete') }}" class="btn btn-sm btn-warning text-dark fw-bold ms-3">Complete Profile</a>
+            </div>
+        </div>
+    @endif
 
     {{-- ================= CARD STACK (all 3 visible, staircase) ================= --}}
     <div class="stack-wrapper">
@@ -330,19 +346,19 @@
                 @forelse(($packages ?? []) as $package)
                     <div class="promo-item">
                         <h6>
-                            <span>{{ $package->name }}
-                                @if($package->requires_fasting)
+                            <span>{{ $package->name ?? 'Package' }}
+                                @if(!empty($package->requires_fasting))
                                     <span class="promo-badge">FASTING REQUIRED</span>
                                 @endif
                             </span>
-                            <span class="promo-price">₱{{ number_format($package->price, 2) }}</span>
+                            <span class="promo-price">₱{{ number_format($package->price ?? 0, 2) }}</span>
                         </h6>
-                        @if($package->inclusions->isNotEmpty())
+                        @if(isset($package->inclusions) && $package->inclusions->isNotEmpty())
                             <p class="promo-inclusions">
-                                {{ $package->inclusions->pluck('item_name')->join(', ') }}
+                                {{ $package->inclusions->pluck('item_name')->filter()->join(', ') }}
                             </p>
                         @endif
-                        <a href="{{ route('appointment.form', ['package' => $package->id]) }}" class="btn-action" style="padding:6px 14px; font-size:0.8rem; margin-top:4px;">
+                        <a href="{{ route('appointment.form', ['package' => $package->id ?? 0]) }}" class="btn-action" style="padding:6px 14px; font-size:0.8rem; margin-top:4px;">
                             Book This Package
                         </a>
                     </div>
@@ -361,7 +377,9 @@
 
                 @forelse(($unavailableDates ?? []) as $blocked)
                     <div class="unavailable-row">
-                        <span class="unavailable-date">{{ $blocked->date->format('M d, Y') }}</span>
+                        <span class="unavailable-date">
+                            {{ isset($blocked->date) ? \Carbon\Carbon::parse($blocked->date)->format('M d, Y') : 'N/A' }}
+                        </span>
                         <span class="unavailable-reason">{{ $blocked->reason ?? 'Not accepting appointments' }}</span>
                     </div>
                 @empty
@@ -384,31 +402,6 @@
         </div>
         <div class="stack-hint">Click a box to bring it to the front</div>
     </div>
-
-    {{-- ================= RECENT ACTIVITY (unchanged) ================= --}}
-    {{-- <div class="row">
-        <div class="col-md-12">
-            <div class="card-dashboard">
-                <h5>Recent Activity</h5>
-                <table class="table table-transparent text-white mt-3">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Service</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>--</td>
-                            <td>No recent appointments</td>
-                            <td>--</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div> --}}
   </div>
 </div>
 
@@ -416,16 +409,18 @@
   const menuToggle = document.getElementById('menuToggle');
   const sidebar = document.getElementById('sidebar');
 
-  menuToggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    sidebar.classList.toggle('active');
-  });
+  if (menuToggle && sidebar) {
+    menuToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sidebar.classList.toggle('active');
+    });
 
-  document.addEventListener('click', (e) => {
-    if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-      sidebar.classList.remove('active');
-    }
-  });
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+        sidebar.classList.remove('active');
+      }
+    });
+  }
 </script>
 
 <script>
@@ -435,8 +430,6 @@
 
     const cards = Array.from(stack.querySelectorAll('.stack-card'));
 
-    // subtle tilt only on the front card, purely visual — position/size
-    // for all 3 boxes now comes straight from the CSS [data-order] rules
     cards.forEach(card => {
         card.addEventListener('mousemove', (e) => {
             if (card.dataset.order !== '0') return;
@@ -452,7 +445,6 @@
             card.style.setProperty('--tiltY', '0deg');
         });
 
-        // click a peeking box -> promote to front, shift the rest back
         card.addEventListener('click', () => {
             const clickedOrder = parseInt(card.dataset.order, 10);
             if (clickedOrder === 0) return;

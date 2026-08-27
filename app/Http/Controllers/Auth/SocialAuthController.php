@@ -7,6 +7,7 @@ use App\Models\UserAccount;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
+use Throwable;
 
 class SocialAuthController extends Controller
 {
@@ -22,42 +23,50 @@ class SocialAuthController extends Controller
 
     public function callback(string $provider): RedirectResponse
     {
-        $socialUser = Socialite::driver($provider)->stateless()->user();
+        try {
+            $socialUser = Socialite::driver($provider)->stateless()->user();
+        } catch (Throwable $e) {
+            // Catches Facebook crawler hits, invalid state tokens, or cancelled logins
+            return redirect()->route('login.register')
+                ->with('login_error', 'Authentication failed or was cancelled. Please try again.');
+        }
 
         $email = $socialUser->getEmail();
 
         if (!$email) {
-            // Facebook can withhold email if the user declines to share it.
-            // For a patient system we require one to create an account.
-            return redirect()->route('login')
-                ->with('login_error', 'Your account did not share an email. Please try again or register manually.');
+            // Facebook can withhold email if the user declines to share it
+            return redirect()->route('login.register')
+                ->with('login_error', 'Your account did not share an email address. Please register manually.');
         }
 
-        // already linked to this provider?
+        // Already linked to this provider?
         $user = UserAccount::where('oauth_provider', $provider)
             ->where('oauth_uid', $socialUser->getId())
             ->first();
 
         if (!$user) {
-            // existing manual account with same email? link it
+            // Existing manual account with same email? Link it
             $user = UserAccount::where('email', $email)->first();
 
             if ($user) {
                 $user->update([
                     'oauth_provider' => $provider,
-                    'oauth_uid' => $socialUser->getId(),
+                    'oauth_uid'      => $socialUser->getId(),
                 ]);
             } else {
-                [$firstName, $middleName, $lastName] = $this->splitName($socialUser->getName() ?? '');
+                // Split name safely with fallbacks
+                $rawName = $socialUser->getName() ?? $socialUser->getNickname() ?? 'Patient User';
+                [$firstName, $middleName, $lastName] = $this->splitName($rawName);
 
                 $user = UserAccount::create([
-                    'role' => 'patient', // never let the client choose this
-                    'first_name' => $firstName,
-                    'middle_name' => $middleName,
-                    'last_name' => $lastName,
-                    'email' => $email,
+                    'role'           => 'patient', // Enforce patient role
+                    'first_name'     => $firstName ?: 'Patient',
+                    'middle_name'    => $middleName,
+                    'last_name'      => $lastName ?: 'User',
+                    'email'          => $email,
                     'oauth_provider' => $provider,
-                    'oauth_uid' => $socialUser->getId(),
+                    'oauth_uid'      => $socialUser->getId(),
+                    'password'       => null,
                 ]);
             }
         }
@@ -65,7 +74,7 @@ class SocialAuthController extends Controller
         auth()->login($user);
         request()->session()->regenerate();
 
-        return $this->profileIsComplete($user)
+        return static::profileIsComplete($user)
             ? $this->redirectByRole($user)
             : redirect()->route('profile.complete');
     }
@@ -78,7 +87,7 @@ class SocialAuthController extends Controller
     {
         $user = auth()->user();
 
-        if ($this->profileIsComplete($user)) {
+        if (static::profileIsComplete($user)) {
             return $this->redirectByRole($user);
         }
 
@@ -106,8 +115,6 @@ class SocialAuthController extends Controller
             ->with('success', 'Profile completed successfully.');
     }
 
-    // Same role-based redirect your AccountController already uses,
-    // so both the manual and social login paths land in the same place.
     private function redirectByRole($user): RedirectResponse
     {
         if ($user->role === 'admin') {
@@ -127,15 +134,25 @@ class SocialAuthController extends Controller
 
     private function splitName(string $fullName): array
     {
-        $parts = preg_split('/\s+/', trim($fullName)) ?: [''];
-        $first = $parts[0] ?? '';
-        $last = count($parts) > 1 ? array_pop($parts) : '';
-        $middle = count($parts) > 1 ? implode(' ', array_slice($parts, 1)) : '';
+        $cleanName = trim($fullName);
+        if (empty($cleanName)) {
+            return ['Patient', null, 'User'];
+        }
+
+        $parts = preg_split('/\s+/', $cleanName);
+        $first = array_shift($parts) ?: 'Patient';
+        $last = count($parts) > 0 ? array_pop($parts) : 'User';
+        $middle = count($parts) > 0 ? implode(' ', $parts) : null;
+
         return [$first, $middle, $last];
     }
 
-    public static function profileIsComplete(UserAccount $user): bool
+    public static function profileIsComplete(?UserAccount $user): bool
     {
+        if (!$user) {
+            return false;
+        }
+
         return !empty($user->date_of_birth)
             && !empty($user->sex)
             && !empty($user->Umunicipality)
