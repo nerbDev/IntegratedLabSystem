@@ -19,27 +19,27 @@ return new class extends Migration
 
             // Personal Information
             $table->string('first_name');
-            $table->string('middle_name')->nullable();
+            $table->string('middle_name')->nullable()->change();
             $table->string('last_name');
-            $table->date('date_of_birth');
-            $table->enum('sex', ['male', 'female']);
-            $table->string('Umunicipality');
-            $table->string('Ubarangay');
-            $table->string('Ustreet_house');
+            $table->date('date_of_birth')->nullable()->change();
+            $table->enum('sex', ['male', 'female'])->nullable()->change();
+            $table->string('Umunicipality')->nullable()->change();
+            $table->string('Ubarangay')->nullable()->change();
+            $table->string('Ustreet_house')->nullable()->change();
 
             // Contact Information
-            $table->string('phone_number');
-            $table->string('email')->unique();
+            $table->string('phone_number')->nullable()->change();
+            $table->string('email')->unique()->nullable()->change();
 
             // Emergency Contact
-            $table->string('contact_person');
-            $table->string('contact_number');
+            $table->string('contact_person')->nullable()->change();
+            $table->string('contact_number')->nullable()->change();
 
             // Login Information
-            $table->string('password');
+            $table->string('password')->nullable()->change();
 
             // Laravel timestamps
-            $table->timestamps();
+            $table->timestamps()->nullable()->change();
         });
     }
 

@@ -32,6 +32,8 @@ class UserAccount extends Authenticatable
         'contact_person',
         'contact_number',
         'password',
+        'oauth_provider',
+        'oauth_uid',
     ];
 
     /**
