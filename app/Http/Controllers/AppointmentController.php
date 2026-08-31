@@ -330,4 +330,19 @@ class AppointmentController extends Controller
         $role = Auth::user()->role ?? 'User';
         return ucfirst($role);
     }
+
+
+    // func for activity-log print service
+        public function printTimeline($id)
+    {
+        $appointment = Appointment::find($id) ?? ArchivedAppointment::find($id);
+
+        abort_if(!$appointment, 404);
+
+        $logs = ActivityLog::where('reference_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('activity-log.timeline-print', compact('appointment', 'logs'));
+    }
 }

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Activity Log Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; color: #000; padding: 20px; }
+
+        .print-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+        .print-header img {
+            height: 60px;
+            width: auto;
+        }
+        .print-header .org-info h1 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        .print-header .org-info p {
+            margin: 2px 0 0;
+            font-size: 0.8rem;
+            color: #444;
+        }
+        .print-header .gen-info {
+            margin-left: auto;
+            text-align: right;
+            font-size: 0.8rem;
+            color: #444;
+        }
+
+        h2 { margin: 0 0 4px; }
+        .meta { color: #555; font-size: 0.85rem; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th, td { border: 1px solid #999; padding: 6px 8px; text-align: left; vertical-align: top; }
+        th { background: #eee; }
+        .no-print { margin-bottom: 20px; }
+        @media print {
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <button onclick="window.print()">Print</button>
+    </div>
+
+    <div class="print-header">
+        {{-- Replace with your actual logo path, e.g. public/images/logo.png --}}
+        <img src="{{ asset('images/SMHLogo.png') }}" alt="Logo">
+
+        <div class="org-info">
+            <h1>Subic Med-Health Laboratory</h1>
+            {{-- Replace with your actual branch/clinic address --}}
+            <p> 14-A National Highway Mangan-Vaca, Subic, Philippines, 2209</p>
+        </div>
+
+        <div class="gen-info">
+            <div>Generated: {{ now()->format('M d, Y h:i A') }}</div>
+        </div>
+    </div>
+
+    <h2>Activity Log Report</h2>
+    <div class="meta">
+        @if(request('user_role')) Role: {{ ucfirst(request('user_role')) }} @endif
+        @if(request('module')) &nbsp;|&nbsp; Module: {{ request('module') }} @endif
+        @if(request('action')) &nbsp;|&nbsp; Action: {{ request('action') }} @endif
+        @if(request('date_from')) &nbsp;|&nbsp; From: {{ request('date_from') }} @endif
+        @if(request('date_to')) &nbsp;|&nbsp; To: {{ request('date_to') }} @endif
+        @if(request('search')) &nbsp;|&nbsp; Search: "{{ request('search') }}" @endif
+        &nbsp;|&nbsp; {{ $logs->count() }} record(s)
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Date/Time</th>
+                <th>User</th>
+                <th>Role</th>
+                <th>Module</th>
+                <th>Action</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($logs as $log)
+                <tr>
+                    <td>{{ $log->created_at->format('M d, Y h:i A') }}</td>
+                    <td>{{ $log->user_name }}</td>
+                    <td>{{ ucfirst($log->user_role) }}</td>
+                    <td>{{ $log->module }}</td>
+                    <td>{{ $log->action }}</td>
+                    <td>{{ $log->description }}</td>
+                </tr>
+            @empty
+                <tr><td colspan="6">No records found.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+</body>
+</html>

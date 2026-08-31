@@ -32,6 +32,9 @@
         <div class="col-auto">
             <button class="btn btn-primary" type="submit">Filter</button>
             <a href="{{ route('staff.transactions') }}" class="btn btn-outline-secondary">Reset</a>
+            <a href="{{ route('staff.transactions.print', request()->query()) }}" target="_blank" class="btn btn-outline-secondary">
+                <i class="bi bi-printer"></i> Print
+            </a>
         </div>
     </form>
 

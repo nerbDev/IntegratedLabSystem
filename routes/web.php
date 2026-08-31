@@ -176,6 +176,16 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         ->name('admin.appointments.timeline');
 });
 
+// route for activity logs print service
+Route::middleware(['auth', 'role:admin'])->group(function () {
+
+    Route::get('/admin/activity-logs/print', [ActivityLogController::class, 'printList'])
+        ->name('admin.activityLogs.printList');
+
+    Route::get('/admin/appointments/{id}/timeline/print', [AppointmentController::class, 'printTimeline'])
+        ->name('admin.appointments.timeline.print');
+});
+
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/profile', [AdminProfileController::class, 'show'])->name('admin.profile.show');
     Route::put('/admin/profile', [AdminProfileController::class, 'update'])->name('admin.profile.update');
@@ -262,17 +272,24 @@ Route::middleware('auth')->group(function () {
     Route::put('/patient/account-setting/password', [AccountController::class, 'patientPasswordUpdate'])->name('patient.accountsetting.password');
 });
 
+// PRINT SERVICES
 // --- Staff group ---
 Route::get('/staff/transactions', [TransactionController::class, 'staffTransactions'])
     ->name('staff.transactions');
+Route::get('/staff/transactions/print', [TransactionController::class, 'printStaffTransactions'])
+    ->name('staff.transactions.print');
 
 // --- Patient group ---
 Route::get('/patient/transactions', [TransactionController::class, 'patientTransactions'])
     ->name('patient.transactions');
+Route::get('/patient/transactions/print', [TransactionController::class, 'printPatientTransactions'])
+    ->name('patient.transactions.print');
 
 // --- Admin group ---
 Route::get('/admin/my-transactions', [TransactionController::class, 'adminTransactions'])
     ->name('admin.transactions');
+Route::get('/admin/my-transactions/print', [TransactionController::class, 'printAdminTransactions'])
+    ->name('admin.transactions.print');
 
 
 Route::get('/forgot-password', [ForgotPasswordController::class, 'showForgotForm'])

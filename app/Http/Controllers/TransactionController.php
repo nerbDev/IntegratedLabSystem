@@ -24,7 +24,23 @@ class TransactionController extends Controller
         $transactions = $query->paginate(20)->withQueryString();
 
         return view('SStransactions_table', compact('transactions'));
-        // adjust view path to match your existing staff blade folder convention
+    }
+
+    public function printStaffTransactions(Request $request)
+    {
+        $staffId = Auth::id();
+
+        $query = ActivityLog::where('user_id', $staffId)
+            ->orderByDesc('created_at');
+
+        $this->applyCommonFilters($query, $request);
+
+        return view('partials.transactions-print', [
+            'transactions' => $query->get(),
+            'title'        => 'My Transactions',
+            'ownerName'    => Auth::user()->first_name . ' ' . Auth::user()->last_name,
+            'ownerRole'    => 'Staff',
+        ]);
     }
 
     /**
@@ -34,9 +50,7 @@ class TransactionController extends Controller
     {
         $patientId = Auth::id();
 
-        // appointment IDs that belong to this patient account
-        $appointmentIds = Appointment::where('patient_id', $patientId)
-            ->pluck('id');
+        $appointmentIds = Appointment::where('patient_id', $patientId)->pluck('id');
 
         $query = ActivityLog::where(function ($q) use ($patientId, $appointmentIds) {
                 $q->where('user_id', $patientId)
@@ -54,9 +68,33 @@ class TransactionController extends Controller
         return view('PStransactions_table', compact('transactions'));
     }
 
+    public function printPatientTransactions(Request $request)
+    {
+        $patientId = Auth::id();
+
+        $appointmentIds = Appointment::where('patient_id', $patientId)->pluck('id');
+
+        $query = ActivityLog::where(function ($q) use ($patientId, $appointmentIds) {
+                $q->where('user_id', $patientId)
+                  ->orWhere(function ($q2) use ($appointmentIds) {
+                      $q2->whereIn('module', ['Appointment', 'AppointmentResult'])
+                         ->whereIn('reference_id', $appointmentIds);
+                  });
+            })
+            ->orderByDesc('created_at');
+
+        $this->applyCommonFilters($query, $request);
+
+        return view('partials.transactions-print', [
+            'transactions' => $query->get(),
+            'title'        => 'My Transaction History',
+            'ownerName'    => Auth::user()->first_name . ' ' . Auth::user()->last_name,
+            'ownerRole'    => 'Patient',
+        ]);
+    }
+
     /**
-     * Admin: "My Activity" — same data source, own actions only.
-     * Optional — separate from the existing full Activity-log admin page.
+     * Admin: "My Activity" - own actions only.
      */
     public function adminTransactions(Request $request)
     {
@@ -72,9 +110,23 @@ class TransactionController extends Controller
         return view('AStransactions_table', compact('transactions'));
     }
 
-    /**
-     * Shared filters usable across all three (date range, module, action).
-     */
+    public function printAdminTransactions(Request $request)
+    {
+        $adminId = Auth::id();
+
+        $query = ActivityLog::where('user_id', $adminId)
+            ->orderByDesc('created_at');
+
+        $this->applyCommonFilters($query, $request);
+
+        return view('partials.transactions-print', [
+            'transactions' => $query->get(),
+            'title'        => 'My Transactions',
+            'ownerName'    => Auth::user()->first_name . ' ' . Auth::user()->last_name,
+            'ownerRole'    => 'Admin',
+        ]);
+    }
+
     private function applyCommonFilters($query, Request $request)
     {
         if ($request->filled('module')) {

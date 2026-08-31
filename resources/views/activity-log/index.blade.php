@@ -215,6 +215,12 @@
                     <a href="{{ route('admin.activityLogs.index') }}" class="btn btn-glass-secondary btn-sm px-3">
                         Reset
                     </a>
+                    <a href="{{ route('admin.activityLogs.printList', request()->query()) }}"
+                    target="_blank"
+                    class="btn btn-glass-secondary btn-sm px-3">
+                        <i class="bi bi-printer"></i> 
+                        Print
+                    </a>
                 </div>
             </form>
         </div>

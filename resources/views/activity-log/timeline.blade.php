@@ -90,6 +90,9 @@
     <a href="{{ route('admin.activityLogs.index') }}" class="btn btn-glass-secondary btn-sm mb-4">
         <i class="bi bi-arrow-left"></i> Back to Activity Logs
     </a>
+    <a href="{{ route('admin.appointments.timeline.print', $appointment->id) }}" target="_blank" class="btn btn-glass-secondary btn-sm mb-4">
+        <i class="bi bi-printer"></i> Print
+    </a>
 
     <div class="timeline-wrapper">
         @forelse($logs as $log)

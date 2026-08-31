@@ -7,9 +7,9 @@ use Illuminate\Http\Request;
 
 class ActivityLogController extends Controller
 {
-    public function index(Request $request)
+    private function filteredLogs(Request $request)
     {
-        $logs = ActivityLog::query()
+        return ActivityLog::query()
             ->when($request->user_role, fn($q) => $q->where('user_role', $request->user_role))
             ->when($request->module, fn($q) => $q->where('module', $request->module))
             ->when($request->action, fn($q) => $q->where('action', $request->action))
@@ -19,16 +19,27 @@ class ActivityLogController extends Controller
             }))
             ->when($request->date_from, fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
             ->when($request->date_to, fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
-            ->orderBy('created_at', 'desc')
+            ->orderBy('created_at', 'desc');
+    }
+
+    public function index(Request $request)
+    {
+        $logs = $this->filteredLogs($request)
             ->paginate(25)
             ->withQueryString();
 
-        // For filter dropdowns
         $modules = ActivityLog::distinct()->pluck('module');
         $actions = ActivityLog::distinct()->pluck('action');
         $roles   = ActivityLog::distinct()->pluck('user_role');
 
-        // Changed view path to views/activity-log
         return view('activity-log.index', compact('logs', 'modules', 'actions', 'roles'));
+    }
+
+    public function printList(Request $request)
+    {
+        // No pagination here - print wants every matching row, not just page 1
+        $logs = $this->filteredLogs($request)->get();
+
+        return view('activity-log.print-list', compact('logs'));
     }
 }
