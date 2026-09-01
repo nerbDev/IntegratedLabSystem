@@ -404,19 +404,19 @@
         <div class="row g-3 mb-4">
           <div class="col-4">
             <div class="stat-badge" style="background:#f0f6ff;border-radius:12px;padding:20px;">
-              <div class="num" data-target="25">0</div>
+              <div class="num" data-target="2">0</div>
               <p>Years of Service</p>
             </div>
           </div>
           <div class="col-4">
             <div class="stat-badge" style="background:#f0f6ff;border-radius:12px;padding:20px;">
-              <div class="num" data-target="50000">0</div>
+              <div class="num" data-target="1000+">0</div>
               <p>Patients Served</p>
             </div>
           </div>
           <div class="col-4">
             <div class="stat-badge" style="background:#f0f6ff;border-radius:12px;padding:20px;">
-              <div class="num" data-target="120">0</div>
+              <div class="num" data-target="100+">0</div>
               <p>Tests Available</p>
             </div>
           </div>
@@ -424,7 +424,7 @@
         <!-- Map placeholder (replace src with actual embed) -->
         <div class="about-map-wrap">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d123819.70808631987!2d120.97878!3d14.6760413!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397b070ea1e30ef%3A0xa902018cd4e4f92!2sQuezon%20City%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v1680000000000"
+            src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d563.9096603508078!2d120.2363038295367!3d14.88513311429441!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e1!3m2!1sen!2sph!4v1788266581201!5m2!1sen!2sph" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
             width="100%" height="280" style="border:0;display:block;"
             allowfullscreen="" loading="lazy"
             referrerpolicy="no-referrer-when-downgrade">
@@ -511,21 +511,21 @@
           <div class="icon-wrap"><i class="bi bi-geo-alt-fill"></i></div>
           <div>
             <h6 class="fw-bold mb-1">Address</h6>
-            <p class="mb-0 text-muted">123 Health Avenue, Quezon City, Metro Manila, Philippines 1100</p>
+            <p class="mb-0 text-muted">14-A National Highway Mangan-Vaca, Subic, Philippines, 2209</p>
           </div>
         </div>
         <div class="contact-info-item">
           <div class="icon-wrap"><i class="bi bi-telephone-fill"></i></div>
           <div>
             <h6 class="fw-bold mb-1">Phone</h6>
-            <p class="mb-0 text-muted">(02) 8123-4567 &nbsp;|&nbsp; 0917-123-4567</p>
+            <p class="mb-0 text-muted">09354815423 </p>
           </div>
         </div>
         <div class="contact-info-item">
           <div class="icon-wrap"><i class="bi bi-envelope-fill"></i></div>
           <div>
             <h6 class="fw-bold mb-1">Email</h6>
-            <p class="mb-0 text-muted">info@smhlaboratory.com</p>
+            <p class="mb-0 text-muted">subicmedhealthlab@gmail.com</p>
           </div>
         </div>
         <div class="contact-info-item">
@@ -533,8 +533,8 @@
           <div>
             <h6 class="fw-bold mb-1">Operating Hours</h6>
             <p class="mb-0 text-muted">
-              Mon – Sat: 6:00 AM – 6:00 PM<br>
-              Sunday: 7:00 AM – 12:00 NN
+              Mon – Sat: 7:00 AM – 3:00 PM<br>
+              Friday: 7:00 AM – 3:00 PM
             </p>
           </div>
         </div>
@@ -542,7 +542,7 @@
           <div class="icon-wrap"><i class="bi bi-facebook"></i></div>
           <div>
             <h6 class="fw-bold mb-1">Social Media</h6>
-            <p class="mb-0 text-muted">facebook.com/SMHLaboratory</p>
+            <p class="mb-0 text-muted">facebook.com/Subic Med-Health Laboratory</p>
           </div>
         </div>
       </div>
