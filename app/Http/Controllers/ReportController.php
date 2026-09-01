@@ -167,12 +167,12 @@ class ReportController extends Controller
 
         $appointmentIdsInRange = (clone $appointmentsQuery)->pluck('id');
 
+        // NOTE: appointment_results has no structured per-parameter data in the
+        // current app flow (results are an uploaded PDF via file_path) — the old
+        // is_abnormal/category/etc. columns were dropped from the DB, so there's
+        // no "abnormal results" stat to compute anymore. Only "processed vs
+        // unprocessed" (i.e. has a result uploaded or not) is tracked below.
         $processedCount = AppointmentResult::whereIn('appointment_id', $appointmentIdsInRange)
-            ->distinct('appointment_id')
-            ->count('appointment_id');
-
-        $abnormalCount = AppointmentResult::whereIn('appointment_id', $appointmentIdsInRange)
-            ->where('is_abnormal', true)
             ->distinct('appointment_id')
             ->count('appointment_id');
 
@@ -207,7 +207,6 @@ class ReportController extends Controller
             'lab_results' => [
                 'processed'   => $processedCount,
                 'unprocessed' => $unprocessed,
-                'abnormal'    => $abnormalCount,
             ],
             'patients' => [
                 'new'       => $newPatients,
