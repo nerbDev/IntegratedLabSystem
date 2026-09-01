@@ -410,13 +410,13 @@
           </div>
           <div class="col-4">
             <div class="stat-badge" style="background:#f0f6ff;border-radius:12px;padding:20px;">
-              <div class="num" data-target="1000+">0</div>
+              <div class="num" data-target="1000">0</div>
               <p>Patients Served</p>
             </div>
           </div>
           <div class="col-4">
             <div class="stat-badge" style="background:#f0f6ff;border-radius:12px;padding:20px;">
-              <div class="num" data-target="100+">0</div>
+              <div class="num" data-target="100">0</div>
               <p>Tests Available</p>
             </div>
           </div>
