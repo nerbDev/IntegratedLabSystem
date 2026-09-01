@@ -21,11 +21,21 @@ class SocialAuthController extends Controller
             ->redirect();
     }
 
-        public function callback(string $provider): RedirectResponse
-        {
-            try {
-                $socialUser = Socialite::driver($provider)->stateless()->user();
-            } catch (\Throwable $e) {
+            public function callback(string $provider): RedirectResponse
+            {
+                // Facebook's own servers pre-fetch/scan the OAuth redirect_uri using this
+                // user-agent before the user's real browser follows the redirect. If we
+                // let this bot request reach Socialite, it consumes the single-use auth
+                // code, so the real browser's follow-up request fails. Bail out early
+                // with a no-op response so the code stays valid for the actual user.
+                if (str_contains(request()->userAgent() ?? '', 'facebookexternalhit')
+                    || str_contains(request()->userAgent() ?? '', 'Facebot')) {
+                    return response('', 200);
+                }
+
+                try {
+                    $socialUser = Socialite::driver($provider)->stateless()->user();
+                } catch (\Throwable $e) {
                 // Log the exact error to storage/logs/laravel.log
                 \Illuminate\Support\Facades\Log::error("{$provider} Login Error: " . $e->getMessage());
 
