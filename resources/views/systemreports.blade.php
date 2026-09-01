@@ -361,11 +361,6 @@
                     <div class="rp-tile-val">${l.unprocessed}</div>
                     <div class="rp-tile-sub">approved, not yet processed</div>
                 </div>
-                <div class="rp-tile accent-red">
-                    <div class="rp-tile-label"><i class="bi bi-exclamation-diamond"></i> Abnormal Results</div>
-                    <div class="rp-tile-val">${l.abnormal}</div>
-                    <div class="rp-tile-sub">flagged for review</div>
-                </div>
             </div>
 
             <div class="rp-section"><i class="bi bi-people"></i> Patient Data Management</div>
