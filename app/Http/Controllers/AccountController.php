@@ -353,69 +353,75 @@ class AccountController extends Controller
         ));
     }
 
-    public function staffDashboard()
-    {
-        return view('staffdashboard');
-    }
+            public function staffDashboard()
+        {
+            $today       = Carbon::today();
+            $startOfWeek = $today->copy()->startOfWeek(Carbon::MONDAY);
+            $endOfWeek   = $today->copy()->endOfWeek(Carbon::SUNDAY);
 
-    public function patientDashboard()
-    {
-        try {
-            $packages = Package::active()
-                ->with('inclusions')
-                ->latest()
-                ->take(6)
+            // ---------- KPI CARDS ----------
+            $todaysSchedule = Appointment::where('appointment_date', $today->toDateString())
+                ->where('status', 'approved')
+                ->count();
+
+            $pendingRequests = Appointment::where('status', 'pending')->count();
+
+            $completedThisWeek = Appointment::whereBetween('appointment_date', [
+                    $startOfWeek->toDateString(), $endOfWeek->toDateString(),
+                ])
+                ->where('status', 'completed')
+                ->count();
+
+            $upcomingApproved = Appointment::where('status', 'approved')
+                ->where('appointment_date', '>=', $today->toDateString())
+                ->count();
+
+            // ---------- APPOINTMENT STATUS BREAKDOWN (doughnut) ----------
+            $knownStatuses = ['pending', 'approved', 'rescheduled', 'completed', 'cancelled', 'released'];
+            $statusCounts = Appointment::selectRaw('status, COUNT(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status');
+
+            $appointmentStatusLabels = collect($knownStatuses)->map(fn ($s) => ucfirst($s));
+            $appointmentStatusData = collect($knownStatuses)->map(fn ($s) => $statusCounts[$s] ?? 0);
+
+            // ---------- THIS WEEK'S SCHEDULE BY DAY (bar) ----------
+            $weekDays = collect(range(0, 6))->map(fn ($i) => $startOfWeek->copy()->addDays($i));
+            $scheduleCounts = Appointment::whereBetween('appointment_date', [
+                    $startOfWeek->toDateString(), $endOfWeek->toDateString(),
+                ])
+                ->selectRaw('appointment_date, COUNT(*) as total')
+                ->groupBy('appointment_date')
+                ->pluck('total', 'appointment_date');
+
+            $weekLabels = $weekDays->map(fn ($d) => $d->format('D'));
+            $weekData   = $weekDays->map(fn ($d) => $scheduleCounts[$d->toDateString()] ?? 0);
+
+            // ---------- HOME VS CLINIC SPLIT (doughnut) ----------
+            // Adjust these values if appointment_type is stored differently.
+            $homeCount   = Appointment::where('appointment_type', 'Home Service')->count();
+            $clinicCount = Appointment::where('appointment_type', 'Online Booking')->count();
+
+            // ---------- RECENT ACTIVITY (staff actions only) ----------
+            $recentActivity = ActivityLog::where('user_role', 'staff')
+                ->orderByDesc('created_at')
+                ->limit(8)
                 ->get();
 
-            $unavailableDates = UnavailableDate::upcoming()
-                ->take(8)
-                ->get();
-
-            return view('patientdashboard', compact('packages', 'unavailableDates'));
-        } catch (\Throwable $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-                'file'    => $e->getFile(),
-                'line'    => $e->getLine(),
-            ], 500);
+            return view('staffdashboard', compact(
+                'todaysSchedule',
+                'pendingRequests',
+                'completedThisWeek',
+                'upcomingApproved',
+                'appointmentStatusLabels',
+                'appointmentStatusData',
+                'weekLabels',
+                'weekData',
+                'homeCount',
+                'clinicCount',
+                'recentActivity'
+            ));
         }
-    }
-
-    // ------------------------------------------------------------
-    // Admin User Accounts Management Methods
-    // ------------------------------------------------------------
-
-    // Render list of accounts using ASuseraccounts view located in resources/views/
-    public function adminUserAccountsIndex()
-    {
-        // Fetch all accounts from your custom useraccount table model
-        $users = UserAccount::orderBy('created_at', 'desc')->get();
-        return view('ASuseraccounts', compact('users'));
-    }
-
-    // Update account profile administrative values
-    public function adminUserAccountsUpdate(Request $request, $id)
-    {
-        $user = UserAccount::findOrFail($id);
-
-        $validated = $request->validate([
-            'first_name'     => 'required|string|max:255',
-            'middle_name'    => 'nullable|string|max:255',
-            'last_name'      => 'required|string|max:255',
-            'role'           => 'required|in:patient,staff,admin',
-            'email'          => 'required|email|unique:useraccount,email,' . $id,
-            'phone_number'   => 'required|string|max:20',
-            'Umunicipality'  => 'required|string|max:255',
-            'Ubarangay'      => 'required|string|max:255',
-            'Ustreet_house'  => 'required|string|max:255',
-            'contact_person' => 'required|string|max:255',
-            'contact_number' => 'required|string|max:20',
-        ]);
-
-        $user->update($validated);
-
-        return redirect()->back()->with('success', 'User profile details successfully modified.');
-    }
 
     // Delete account profile
     public function adminUserAccountsDestroy($id)

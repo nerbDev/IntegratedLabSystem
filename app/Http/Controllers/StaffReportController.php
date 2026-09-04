@@ -136,8 +136,8 @@ class StaffReportController extends Controller
             $cancelled  = (clone $appointmentsQuery)->where('status', 'cancelled')->count();
             $completed  = (clone $appointmentsQuery)->where('status', 'completed')->count();
 
-            $home   = (clone $appointmentsQuery)->where('appointment_type', 'home')->count();
-            $clinic = (clone $appointmentsQuery)->where('appointment_type', 'clinic')->count();
+            $home   = (clone $appointmentsQuery)->where('appointment_type', 'Home Service')->count();
+            $clinic = (clone $appointmentsQuery)->where('appointment_type', 'Online Booking')->count();
 
             // Lab results: an appointment counts as "processed" once it has at
             // least one row in appointment_results.

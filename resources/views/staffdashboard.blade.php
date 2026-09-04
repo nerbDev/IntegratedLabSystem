@@ -7,6 +7,9 @@
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 
   <style>
     body {
@@ -197,9 +200,150 @@
       padding: 20px;
       transition: 0.3s;
       margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .card-dashboard:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+
+    /* ---------- TYPOGRAPHY ---------- */
+    .card-dashboard h5,
+    .kpi-value {
+      font-family: 'Poppins', Arial, sans-serif;
+    }
+
+    /* ---------- CARD HEADER + DIVIDER ---------- */
+    .card-dashboard-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-dashboard-header i {
+      font-size: 1.25rem;
+      line-height: 1;
+    }
+    .card-dashboard-header h5 {
+      margin: 0;
+      font-weight: 600;
+      font-size: 0.92rem;
+      letter-spacing: 0.2px;
+      color: rgba(255,255,255,0.92);
+    }
+    .card-divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.22);
+      margin: 12px 0 16px;
+    }
+    .card-dashboard-body { flex: 1; }
+
+    /* ---------- KPI ICON CIRCLES ---------- */
+    .kpi-icon-circle {
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-blue   { background: rgba(0,212,255,0.2); color: #00d4ff; }
+    .icon-amber  { background: rgba(255,212,59,0.22); color: #ffe066; }
+    .icon-green  { background: rgba(105,219,124,0.22); color: #8ce99a; }
+    .icon-purple { background: rgba(177,151,252,0.22); color: #b197fc; }
+
+    .kpi-value {
+      font-weight: 700;
+      font-size: 1.9rem;
+      margin: 0;
+      color: #fff;
+    }
+    .kpi-label {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.75);
+      margin: 2px 0 0;
+    }
+
+    /* ---------- GLASS BUTTONS (quick actions) ---------- */
+    .btn-glass {
+      background: rgba(255,255,255,0.14);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: 0.25s ease;
+    }
+    .btn-glass:hover {
+      background: rgba(0,212,255,0.22);
+      border-color: rgba(0,212,255,0.4);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    /* ---------- GLASS TABLE (recent activity) ---------- */
+    .table-glass {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .table-glass thead th {
+      font-family: 'Poppins', Arial, sans-serif;
+      font-weight: 600;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.7);
+      text-align: left;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.25);
+    }
+    .table-glass tbody td {
+      padding: 9px 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.92);
+    }
+    .table-glass tbody tr {
+      transition: background 0.2s ease;
+    }
+    .table-glass tbody tr:hover {
+      background: rgba(255,255,255,0.08);
+    }
+    .table-scroll {
+      overflow-x: auto;
+    }
+
+    /* ---------- GRID LAYOUT WRAPPERS ---------- */
+    .dashboard-stack { display: flex; flex-direction: column; gap: 24px; }
+    .quick-actions-row { display: flex; flex-wrap: wrap; gap: 12px; }
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 20px;
+    }
+    .charts-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .schedule-activity-row {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 20px;
     }
 
     /* MOBILE VIEW STYLES */
+    @media (max-width: 992px) {
+      .schedule-activity-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
     @media (max-width: 768px) {
       .mobile-toggle { display: block; }
       
@@ -224,6 +368,43 @@
 
       .content-area {
         padding: 20px;
+      }
+
+      .card-dashboard {
+        padding: 16px;
+      }
+
+      .kpi-row {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 14px;
+      }
+
+      .kpi-value {
+        font-size: 1.5rem;
+      }
+
+      .kpi-icon-circle {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+      }
+
+      .quick-actions-row .btn-glass {
+        flex: 1 1 45%;
+        justify-content: center;
+      }
+
+      canvas {
+        max-height: 200px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .quick-actions-row .btn-glass {
+        flex: 1 1 100%;
+      }
+      .card-dashboard-header h5 {
+        font-size: 0.85rem;
       }
     }
   </style>
@@ -308,26 +489,131 @@
       @yield('content')
 
       @if(!View::hasSection('content'))
-        <div class="row row-cols-1 row-cols-md-3 g-4">
-          <div class="col">
-            <div class="card-dashboard">
-              <h5>Today’s Schedule</h5>
-              <p>5 appointments scheduled today</p>
+      <div class="dashboard-stack">
+
+        <!-- QUICK ACTION SHORTCUTS -->
+        <div class="quick-actions-row">
+          <a href="{{ route('appointments.requests') }}" class="btn-glass">
+            <i class="bi bi-envelope"></i> Appointment Requests
+          </a>
+          <a href="{{ route('staff.appointments.approved') }}" class="btn-glass">
+            <i class="bi bi-calendar-check"></i> Appointment Schedule
+          </a>
+          <a href="{{ route('staff.reports.index') }}" class="btn-glass">
+            <i class="bi bi-clipboard2-pulse"></i> System Reports
+          </a>
+          <a href="{{ route('staff.transactions') }}" class="btn-glass">
+            <i class="bi bi-clock-history"></i> My Transactions
+          </a>
+          <a href="{{ route('staff.settings.unavailable') }}" class="btn-glass">
+            <i class="bi bi-calendar-x"></i> Block Unavailable Days
+          </a>
+        </div>
+
+        <!-- KPI CARDS -->
+        <div class="kpi-row">
+          <div class="card-dashboard" style="flex-direction:row; align-items:center; gap:14px;">
+            <div class="kpi-icon-circle icon-blue"><i class="bi bi-calendar-day"></i></div>
+            <div>
+              <p class="kpi-value">{{ number_format($todaysSchedule) }}</p>
+              <p class="kpi-label">Today's Schedule</p>
             </div>
           </div>
-          <div class="col">
-            <div class="card-dashboard">
-              <h5>Pending Requests</h5>
-              <p>2 new appointment requests</p>
+          <div class="card-dashboard" style="flex-direction:row; align-items:center; gap:14px;">
+            <div class="kpi-icon-circle icon-amber"><i class="bi bi-envelope"></i></div>
+            <div>
+              <p class="kpi-value">{{ number_format($pendingRequests) }}</p>
+              <p class="kpi-label">Pending Requests</p>
             </div>
           </div>
-          <div class="col">
-            <div class="card-dashboard">
-              <h5>Completed</h5>
-              <p>12 appointments completed this week</p>
+          <div class="card-dashboard" style="flex-direction:row; align-items:center; gap:14px;">
+            <div class="kpi-icon-circle icon-green"><i class="bi bi-check-circle-fill"></i></div>
+            <div>
+              <p class="kpi-value">{{ number_format($completedThisWeek) }}</p>
+              <p class="kpi-label">Completed This Week</p>
+            </div>
+          </div>
+          <div class="card-dashboard" style="flex-direction:row; align-items:center; gap:14px;">
+            <div class="kpi-icon-circle icon-purple"><i class="bi bi-calendar-check"></i></div>
+            <div>
+              <p class="kpi-value">{{ number_format($upcomingApproved) }}</p>
+              <p class="kpi-label">Upcoming Approved</p>
             </div>
           </div>
         </div>
+
+        <!-- CHARTS ROW -->
+        <div class="charts-row">
+          <div class="card-dashboard">
+            <div class="card-dashboard-header">
+              <i class="bi bi-pie-chart-fill" style="color:#00d4ff;"></i>
+              <h5>Appointment Status Breakdown</h5>
+            </div>
+            <hr class="card-divider">
+            <div class="card-dashboard-body">
+              <canvas id="appointmentStatusChart" height="220"></canvas>
+            </div>
+          </div>
+
+          <div class="card-dashboard">
+            <div class="card-dashboard-header">
+              <i class="bi bi-bar-chart-line-fill" style="color:#ffe066;"></i>
+              <h5>This Week's Schedule</h5>
+            </div>
+            <hr class="card-divider">
+            <div class="card-dashboard-body">
+              <canvas id="weekScheduleChart" height="220"></canvas>
+            </div>
+          </div>
+
+          <div class="card-dashboard">
+            <div class="card-dashboard-header">
+              <i class="bi bi-house-heart-fill" style="color:#8ce99a;"></i>
+              <h5>Home vs Clinic Visits</h5>
+            </div>
+            <hr class="card-divider">
+            <div class="card-dashboard-body">
+              <canvas id="homeClinicChart" height="220"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- RECENT ACTIVITY -->
+        <div class="schedule-activity-row" style="grid-template-columns: 1fr;">
+          <div class="card-dashboard">
+            <div class="card-dashboard-header">
+              <i class="bi bi-clock-history" style="color:#b197fc;"></i>
+              <h5>Recent Activity</h5>
+            </div>
+            <hr class="card-divider">
+            <div class="card-dashboard-body table-scroll">
+              <table class="table-glass">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Module</th>
+                    <th>When</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @forelse($recentActivity as $log)
+                    <tr>
+                      <td>{{ $log->user_name }}</td>
+                      <td>{{ $log->action }}</td>
+                      <td>{{ $log->module }}</td>
+                      <td>{{ $log->created_at }}</td>
+                    </tr>
+                  @empty
+                    <tr><td colspan="4">No recent activity.</td></tr>
+                  @endforelse
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
       @endif
     </div>
 
@@ -371,6 +657,53 @@
       caret.classList.toggle('open');
     }
   </script>
+
+  @if(!View::hasSection('content'))
+  <script>
+    const chartTextColor = '#ffffff';
+    Chart.defaults.color = chartTextColor;
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.15)';
+
+    // Appointment Status Breakdown
+    new Chart(document.getElementById('appointmentStatusChart'), {
+      type: 'doughnut',
+      data: {
+        labels: @json($appointmentStatusLabels),
+        datasets: [{
+          data: @json($appointmentStatusData),
+          backgroundColor: ['#4dabf7', '#00d4ff', '#b197fc', '#69db7c', '#ff8787', '#63e6be']
+        }]
+      },
+      options: { plugins: { legend: { position: 'bottom' } } }
+    });
+
+    // This Week's Schedule
+    new Chart(document.getElementById('homeClinicChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Home Service', 'Online Booking'],
+        datasets: [{
+          data: [{{ $homeCount }}, {{ $clinicCount }}],
+          backgroundColor: ['#8ce99a', '#4dabf7']
+        }]
+      },
+      options: { plugins: { legend: { position: 'bottom' } } }
+    });
+
+    // Home vs Clinic
+    new Chart(document.getElementById('homeClinicChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Home Service', 'Clinic Visit'],
+        datasets: [{
+          data: [{{ $homeCount }}, {{ $clinicCount }}],
+          backgroundColor: ['#8ce99a', '#4dabf7']
+        }]
+      },
+      options: { plugins: { legend: { position: 'bottom' } } }
+    });
+  </script>
+  @endif
 
 </body>
 </html>

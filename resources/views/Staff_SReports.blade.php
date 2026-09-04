@@ -274,9 +274,9 @@
                     <div class="rp-tile-sub">field appointments</div>
                 </div>
                 <div class="rp-tile">
-                    <div class="rp-tile-label"><i class="bi bi-building"></i> Clinic Visit</div>
+                    <div class="rp-tile-label"><i class="bi bi-laptop"></i> Online Booking</div>
                     <div class="rp-tile-val">${a.clinic}</div>
-                    <div class="rp-tile-sub">walk-in / scheduled</div>
+                    <div class="rp-tile-sub">booked online</div>
                 </div>
             </div>
 
