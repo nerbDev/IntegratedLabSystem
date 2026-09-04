@@ -421,7 +421,7 @@
       <span class="logo-text">Subic Med Health</span>
     </div>
 
-    <div class="welcome-text">Welcome, Staff 👨‍⚕️</div>
+ 
 
     <div class="profile-dropdown">
       <i class="bi bi-person-circle" style="font-size: 22px;"></i>
