@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\Package;
 use App\Models\UnavailableDate;
+use App\Models\Appointment;
+use App\Models\ActivityLog;
+use Illuminate\Support\Carbon;
 
 class AccountController extends Controller
 {
@@ -281,9 +284,73 @@ class AccountController extends Controller
     // ------------------------------
     // Dashboard
     // ------------------------------
-    public function dashboard()
+        public function dashboard()
     {
-        return view('admindashboard');
+        // ---------- KPI CARDS ----------
+        $totalPatients = UserAccount::where('role', 'patient')->count();
+
+        $pendingAppointments = Appointment::where('status', 'pending')->count();
+
+        // "completed" = admin has reviewed/proceeded to lab, waiting on result upload
+        $pendingLabResults = Appointment::where('status', 'completed')
+            ->whereDoesntHave('result')
+            ->count();
+
+        $releasedLabResults = Appointment::where('status', 'released')->count();
+
+        // ---------- APPOINTMENT STATUS BREAKDOWN (doughnut) ----------
+        $knownStatuses = ['pending', 'approved', 'rescheduled', 'completed', 'cancelled', 'released'];
+        $statusCounts = Appointment::selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $appointmentStatusLabels = collect($knownStatuses)->map(fn ($s) => ucfirst($s));
+        $appointmentStatusData = collect($knownStatuses)->map(fn ($s) => $statusCounts[$s] ?? 0);
+
+        // ---------- LAB RESULTS: PENDING VS RELEASED (doughnut) ----------
+        $labResultLabels = ['Pending', 'Released'];
+        $labResultData = [$pendingLabResults, $releasedLabResults];
+
+        // ---------- PATIENT GROWTH (line, last 6 months) ----------
+        $months = collect(range(5, 0))->map(function ($i) {
+            return Carbon::now()->subMonths($i)->format('Y-m');
+        });
+
+        $patientsByMonth = UserAccount::where('role', 'patient')
+            ->where('created_at', '>=', Carbon::now()->subMonths(5)->startOfMonth())
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as ym, COUNT(*) as total")
+            ->groupBy('ym')
+            ->pluck('total', 'ym');
+
+        $patientGrowthLabels = $months->map(fn ($m) => Carbon::createFromFormat('Y-m', $m)->format('M Y'));
+        $patientGrowthData = $months->map(fn ($m) => $patientsByMonth[$m] ?? 0);
+
+        // ---------- PATIENTS BY AREA (bar) ----------
+        $patientsByArea = UserAccount::where('role', 'patient')
+            ->whereNotNull('Umunicipality')
+            ->selectRaw('Umunicipality as municipality, COUNT(*) as total')
+            ->groupBy('Umunicipality')
+            ->orderByDesc('total')
+            ->limit(8)
+            ->get();
+
+        // ---------- RECENT ACTIVITY FEED ----------
+        $recentActivity = ActivityLog::orderByDesc('created_at')->limit(8)->get();
+
+        return view('admindashboard', compact(
+            'totalPatients',
+            'pendingAppointments',
+            'pendingLabResults',
+            'releasedLabResults',
+            'appointmentStatusLabels',
+            'appointmentStatusData',
+            'labResultLabels',
+            'labResultData',
+            'patientGrowthLabels',
+            'patientGrowthData',
+            'patientsByArea',
+            'recentActivity'
+        ));
     }
 
     public function staffDashboard()
