@@ -31,6 +31,7 @@ Route::get('/', function () {
 // Auth Page (Login & Register)
 // ------------------------------
 Route::get('/login', [AccountController::class, 'showAuth'])->name('login.register');
+Route::get('/login', [AccountController::class, 'login'])->name('login');
 Route::post('/login', [AccountController::class, 'login'])->name('login.submit');
 Route::post('/register', [AccountController::class, 'register'])->name('register.submit');
 
