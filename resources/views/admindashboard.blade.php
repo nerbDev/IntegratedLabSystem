@@ -384,9 +384,9 @@
     </div>
 
     <div class="profile-dropdown">
-      <span>Welcome, Admin 🛠️ <i class="bi bi-caret-down-fill"></i></span>
+      <span>Admin <i class="bi bi-caret-down-fill"></i></span>
       <div class="profile-dropdown-content">
-        <a href="{{ route('admin.profile.show') }}">Profile</a>
+        <a href="{{ route('admin.profile.show') }}">  Profile </a>
         <form action="{{ route('logout') }}" method="POST">
           @csrf
           <button type="submit" style="width:100%; background:none; border:none; color:#fff; padding:10px;">Logout</button>
