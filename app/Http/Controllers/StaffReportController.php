@@ -124,75 +124,68 @@ class StaffReportController extends Controller
      * Mirrors the shape used by the admin System Reports view
      * (appointments / lab_results / patients).
      */
-    protected function buildStats(Carbon $start, Carbon $end): array
-    {
-        $appointmentsQuery = Appointment::whereBetween('appointment_date', [
-            $start->toDateString(), $end->toDateString(),
-        ]);
+        protected function buildStats(Carbon $start, Carbon $end): array
+        {
+            $appointmentsQuery = Appointment::whereBetween('appointment_date', [
+                $start->toDateString(), $end->toDateString(),
+            ]);
 
-        $total      = (clone $appointmentsQuery)->count();
-        $approved   = (clone $appointmentsQuery)->where('status', 'approved')->count();
-        $pending    = (clone $appointmentsQuery)->where('status', 'pending')->count();
-        $cancelled  = (clone $appointmentsQuery)->where('status', 'cancelled')->count();
-        $completed  = (clone $appointmentsQuery)->where('status', 'completed')->count();
+            $total      = (clone $appointmentsQuery)->count();
+            $approved   = (clone $appointmentsQuery)->where('status', 'approved')->count();
+            $pending    = (clone $appointmentsQuery)->where('status', 'pending')->count();
+            $cancelled  = (clone $appointmentsQuery)->where('status', 'cancelled')->count();
+            $completed  = (clone $appointmentsQuery)->where('status', 'completed')->count();
 
-        // Adjust these two values to match however appointment_type is
-        // actually stored (e.g. 'home' / 'clinic', 'Home Service' / 'Clinic Visit').
-        $home   = (clone $appointmentsQuery)->where('appointment_type', 'home')->count();
-        $clinic = (clone $appointmentsQuery)->where('appointment_type', 'clinic')->count();
+            $home   = (clone $appointmentsQuery)->where('appointment_type', 'home')->count();
+            $clinic = (clone $appointmentsQuery)->where('appointment_type', 'clinic')->count();
 
-        // Lab results: an appointment counts as "processed" once it has at
-        // least one row in appointment_results.
-        $appointmentIdsInRange = (clone $appointmentsQuery)->pluck('id');
+            // Lab results: an appointment counts as "processed" once it has at
+            // least one row in appointment_results.
+            $appointmentIdsInRange = (clone $appointmentsQuery)->pluck('id');
 
-        $processedCount = AppointmentResult::whereIn('appointment_id', $appointmentIdsInRange)
-            ->distinct('appointment_id')
-            ->count('appointment_id');
+            $processedCount = AppointmentResult::whereIn('appointment_id', $appointmentIdsInRange)
+                ->distinct('appointment_id')
+                ->count('appointment_id');
 
-        $abnormalCount = AppointmentResult::whereIn('appointment_id', $appointmentIdsInRange)
-            ->where('is_abnormal', true)
-            ->distinct('appointment_id')
-            ->count('appointment_id');
+            $unprocessed = $approved - $processedCount;
+            $unprocessed = $unprocessed > 0 ? $unprocessed : 0;
 
-        $unprocessed = $approved - $processedCount;
-        $unprocessed = $unprocessed > 0 ? $unprocessed : 0;
+            // NOTE: "abnormal" tracking removed — appointment_results.is_abnormal
+            // was dropped from the schema and is not populated anywhere in the
+            // actual lab-result upload flow (results are PDFs, not structured data).
 
-        // Patients: "new" = patient accounts created within the period.
-        // "returning" = distinct patient_id in this period who also had an
-        // appointment before the period started.
-        $newPatients = Useraccount::where('role', 'patient')
-            ->whereBetween('created_at', [$start, $end])
-            ->count();
+            $newPatients = Useraccount::where('role', 'patient')
+                ->whereBetween('created_at', [$start, $end])
+                ->count();
 
-        $patientIdsInRange = (clone $appointmentsQuery)->pluck('patient_id')->unique();
+            $patientIdsInRange = (clone $appointmentsQuery)->pluck('patient_id')->unique();
 
-        $returningPatients = Appointment::whereIn('patient_id', $patientIdsInRange)
-            ->where('appointment_date', '<', $start->toDateString())
-            ->distinct('patient_id')
-            ->count('patient_id');
+            $returningPatients = Appointment::whereIn('patient_id', $patientIdsInRange)
+                ->where('appointment_date', '<', $start->toDateString())
+                ->distinct('patient_id')
+                ->count('patient_id');
 
-        $totalPatients = Useraccount::where('role', 'patient')->count();
+            $totalPatients = Useraccount::where('role', 'patient')->count();
 
-        return [
-            'appointments' => [
-                'total'     => $total,
-                'approved'  => $approved,
-                'pending'   => $pending,
-                'cancelled' => $cancelled,
-                'completed' => $completed,
-                'home'      => $home,
-                'clinic'    => $clinic,
-            ],
-            'lab_results' => [
-                'processed'   => $processedCount,
-                'unprocessed' => $unprocessed,
-                'abnormal'    => $abnormalCount,
-            ],
-            'patients' => [
-                'new'       => $newPatients,
-                'returning' => $returningPatients,
-                'total'     => $totalPatients,
-            ],
-        ];
-    }
+            return [
+                'appointments' => [
+                    'total'     => $total,
+                    'approved'  => $approved,
+                    'pending'   => $pending,
+                    'cancelled' => $cancelled,
+                    'completed' => $completed,
+                    'home'      => $home,
+                    'clinic'    => $clinic,
+                ],
+                'lab_results' => [
+                    'processed'   => $processedCount,
+                    'unprocessed' => $unprocessed,
+                ],
+                'patients' => [
+                    'new'       => $newPatients,
+                    'returning' => $returningPatients,
+                    'total'     => $totalPatients,
+                ],
+            ];
+        }
 }
