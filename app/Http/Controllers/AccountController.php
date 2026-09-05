@@ -388,6 +388,29 @@ class AccountController extends Controller
         ));
     }
 
+            public function patientDashboard()
+    {
+        try {
+            $packages = Package::active()
+                ->with('inclusions')
+                ->latest()
+                ->take(6)
+                ->get();
+
+            $unavailableDates = UnavailableDate::upcoming()
+                ->take(8)
+                ->get();
+
+            return view('patientdashboard', compact('packages', 'unavailableDates'));
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+            ], 500);
+        }
+    }
+
             public function staffDashboard()
         {
             $today       = Carbon::today();
