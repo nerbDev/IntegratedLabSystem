@@ -281,6 +281,41 @@ class AccountController extends Controller
         abort(403, 'Unauthorized role');
     }
 
+            // ------------------------------
+        // Admin: User Account Registry (list)
+        // ------------------------------
+        public function adminUserAccountsIndex()
+        {
+            $users = UserAccount::orderBy('last_name')->orderBy('first_name')->get();
+
+            return view('ASuseraccounts', compact('users'));
+        }
+
+        // ------------------------------
+        // Admin: User Account Registry (edit)
+        // ------------------------------
+        public function adminUserAccountsUpdate(Request $request, $id)
+        {
+            $user = UserAccount::findOrFail($id);
+
+            $validated = $request->validate([
+                'first_name'     => 'required|string|max:255',
+                'middle_name'    => 'nullable|string|max:255',
+                'last_name'      => 'required|string|max:255',
+                'email'          => 'required|email|unique:useraccount,email,' . $user->id,
+                'phone_number'   => 'required|string|max:20',
+                'Umunicipality'  => 'required|string|max:255',
+                'Ubarangay'      => 'required|string|max:255',
+                'Ustreet_house'  => 'required|string|max:255',
+                'role'           => 'required|in:patient,staff,admin',
+                'contact_person' => 'required|string|max:255',
+                'contact_number' => 'required|string|max:20',
+            ]);
+
+            $user->update($validated);
+
+            return redirect()->back()->with('success', 'User account updated successfully.');
+        }
     // ------------------------------
     // Dashboard
     // ------------------------------
