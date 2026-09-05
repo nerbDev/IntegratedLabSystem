@@ -146,9 +146,9 @@
           <a href="{{ route('social.redirect', 'google') }}" class="btn btn-light social-btn">
             <i class="bi bi-google"></i> Continue with Google
           </a>
-          <a href="{{ route('social.redirect', 'facebook') }}" class="btn btn-primary social-btn">
+          {{-- <a href="{{ route('social.redirect', 'facebook') }}" class="btn btn-primary social-btn">
             <i class="bi bi-facebook"></i> Continue with Facebook
-          </a>
+          </a> --}}
         </div>
 
         <div class="divider">already have one ?</div>
