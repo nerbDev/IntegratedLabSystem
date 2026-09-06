@@ -31,7 +31,7 @@ class AppointmentResultController extends Controller
     public function store(Request $request, $id)
         
     {
-    
+    dd($request->file('lab_file'), $request->hasFile('lab_file'));
         $appointment = Appointment::findOrFail($id);
 
         // Validate only the file and status — no more 'results' array requirement
