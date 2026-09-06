@@ -342,5 +342,6 @@ Route::get('/debug-php-ini', function () {
         'post_max_size'       => ini_get('post_max_size'),
         'main_ini_file'       => php_ini_loaded_file(),
         'scanned_ini_files'   => php_ini_scanned_files(),
+        'uploads_ini_content' => @file_get_contents('/usr/local/etc/php/conf.d/uploads.ini'),
     ];
 });
