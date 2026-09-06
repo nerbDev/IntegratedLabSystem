@@ -180,9 +180,6 @@
           <a href="{{ route('social.redirect', 'google') }}" class="btn btn-light social-btn">
             <i class="bi bi-google"></i> Sign up with Google
           </a>
-          <a href="{{ route('social.redirect', 'facebook') }}" class="btn btn-primary social-btn">
-            <i class="bi bi-facebook"></i> Sign up with Facebook
-          </a>
         </div>
 
         <div class="divider">or create an account</div>
