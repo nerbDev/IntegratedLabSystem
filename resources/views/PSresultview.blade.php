@@ -45,11 +45,25 @@
         padding: 8px 25px;
         transition: all 0.3s ease;
         text-decoration: none;
+        white-space: nowrap;
     }
     .btn-see-result:hover {
         background: #00d4ff;
         box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
         color: #000;
+    }
+
+    @media (max-width: 767.98px) {
+        .results-card {
+            flex-wrap: wrap;
+            row-gap: 12px;
+        }
+        .results-card .flex-grow-1 {
+            min-width: 60%;
+        }
+        .results-card > div:last-child {
+            margin-left: auto;
+        }
     }
 </style>
 
@@ -71,7 +85,7 @@
         <div class="row">
             @foreach($releasedAppointments as $app)
                 <div class="col-12">
-                    <div class="results-card d-flex align-items-center">
+                    <div class="results-card d-flex flex-wrap align-items-center">
                         <!-- Date Column -->
                         <div class="date-box me-4">
                             <div class="small text-uppercase">{{ \Carbon\Carbon::parse($app->appointment_date)->format('M') }}</div>
