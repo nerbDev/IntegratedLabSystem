@@ -552,7 +552,7 @@
     try {
       const resp = await fetch(`/get-available-slots?date=${dateValue}`);
       const data = await resp.json();
-      const slots = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00'];
+      const slots = ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00'];
       container.innerHTML = '';
       slots.forEach(s => {
         const taken = data.taken.some(t => t.startsWith(s)); 
