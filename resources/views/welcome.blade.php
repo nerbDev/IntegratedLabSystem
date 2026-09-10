@@ -656,7 +656,7 @@
                 <div class="icon-wrap"><i class="bi bi-clock-fill"></i></div>
                 <div>
                   <h6 class="fw-bold mb-1">Operating Hours</h6>
-                  <p class="mb-0">Mon – Sat: 7:00 AM – 3:00 PM</p>
+                  <p class="mb-0">Mon – Sat: 8:00 AM – 2:00 PM</p>
                 </div>
               </div>
               <div class="contact-info-item">
