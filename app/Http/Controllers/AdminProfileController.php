@@ -23,14 +23,17 @@ class AdminProfileController extends Controller
     /**
      * Update profile details (not password)
      */
-    public function update(Request $request)
-    {
-        $admin = Auth::user();
-        $oldData = $admin->only([
-            'first_name', 'middle_name', 'last_name', 'date_of_birth', 'sex',
-            'Umunicipality', 'Ubarangay', 'Ustreet_house',
-            'phone_number', 'email', 'contact_person', 'contact_number'
-        ]);
+
+    
+public function update(Request $request)
+{
+    $admin = Auth::user();
+    $oldData = $admin->only([
+        'first_name', 'middle_name', 'last_name', 'date_of_birth', 'sex',
+        'Umunicipality', 'Ubarangay', 'Ustreet_house',
+        'phone_number', 'email', 'contact_person', 'contact_number'
+    ]);
+
 
         $validated = $request->validate([
             'first_name'     => 'required|string|max:255',
@@ -47,7 +50,10 @@ class AdminProfileController extends Controller
             'contact_number' => 'required|string|max:20',
         ]);
 
-        $admin->update($validated);
+      $admin->update($validated);
+
+
+
 
         // Log the profile update
         ActivityLogger::log(
@@ -56,7 +62,7 @@ class AdminProfileController extends Controller
             description: "Admin {$admin->first_name} {$admin->last_name} updated their own profile",
             old: $oldData,
             new: $validated,
-            referenceId: $admin->id
+            reference_id: $admin->id
         );
 
         return redirect()->back()->with('success', 'Profile updated successfully.');
@@ -65,31 +71,32 @@ class AdminProfileController extends Controller
     /**
      * Update password separately
      */
-    public function updatePassword(Request $request)
-    {
-        $admin = Auth::user();
+        public function updatePassword(Request $request)
+        {
+            $admin = Auth::user();
 
-        $request->validate([
-            'current_password' => 'required',
-            'new_password'      => 'required|min:8|confirmed',
-        ]);
+            $request->validate([
+                'current_password' => 'required',
+                'new_password'      => 'required|min:8|confirmed',
+            ]);
 
-        if (!Hash::check($request->current_password, $admin->password)) {
-            return redirect()->back()->with('error', 'Current password is incorrect.');
+            if (!Hash::check($request->current_password, $admin->password)) {
+                return redirect()->back()->with('error', 'Current password is incorrect.');
+            }
+
+            $admin->update([
+                'password' => Hash::make($request->new_password),
+            ]);
+
+            ActivityLogger::log(
+                module: 'Admin Profile',
+                action: 'Password Change',
+                description: "Admin {$admin->first_name} {$admin->last_name} changed their password",
+                reference_id: $admin->id
+            );
+
+            return redirect()->back()->with('success', 'Password updated successfully.');
         }
 
-        $admin->update([
-            'password' => Hash::make($request->new_password),
-        ]);
 
-        // Log the password change (no old/new values, since we never store plaintext passwords)
-        ActivityLogger::log(
-            module: 'Admin Profile',
-            action: 'Password Change',
-            description: "Admin {$admin->first_name} {$admin->last_name} changed their password",
-            referenceId: $admin->id
-        );
-
-        return redirect()->back()->with('success', 'Password updated successfully.');
-    }
-}
+        }

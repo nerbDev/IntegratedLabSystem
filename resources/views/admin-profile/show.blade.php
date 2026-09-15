@@ -186,8 +186,8 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Date of Birth</label>
-                                <input type="date" name="date_of_birth" class="form-control"
-                                       value="{{ old('date_of_birth', $admin->date_of_birth) }}">
+                                    <input type="date" name="date_of_birth" class="form-control"
+                                        value="{{ old('date_of_birth', $admin->date_of_birth?->format('Y-m-d')) }}">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Sex</label>
