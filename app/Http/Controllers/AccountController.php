@@ -31,8 +31,8 @@ class AccountController extends Controller
             'Ubarangay'       => 'required|string|max:255',
             'Ustreet_house'   => 'required|string|max:255',
             'contact_person'  => 'required|string|max:255',
-            'contact_number'  => 'required|string|max:20',
-            'password'        => 'required|string|min:6|confirmed',
+            'contact_number'  => 'required|string|max:11|min:11:',
+            'password'        => 'required|string|min:8|confirmed',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
@@ -105,7 +105,7 @@ class AccountController extends Controller
             'Ubarangay' => 'required|string|max:255',
             'Ustreet_house' => 'required|string|max:255',
             'contact_person' => 'required|string|max:255',
-            'contact_number' => 'required|string|max:20',
+            'contact_number' => 'required|string|max:11|min:11',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
@@ -252,7 +252,7 @@ class AccountController extends Controller
             'Ubarangay' => 'required|string|max:255',
             'Ustreet_house' => 'required|string|max:255',
             'contact_person' => 'required|string|max:255',
-            'contact_number' => 'required|string|max:20',
+            'contact_number' => 'required|string|max:11|min:11',
         ]);
 
         $user->update($validated);
@@ -309,7 +309,7 @@ class AccountController extends Controller
                 'Ustreet_house'  => 'required|string|max:255',
                 'role'           => 'required|in:patient,staff,admin',
                 'contact_person' => 'required|string|max:255',
-                'contact_number' => 'required|string|max:20',
+                'contact_number' => 'required|string|max:11|min:11',
             ]);
 
             $user->update($validated);
@@ -526,13 +526,13 @@ public function patientAccountSettingUpdate(Request $request)
         'last_name'      => 'required|string|max:255',
         'date_of_birth'  => 'required|date',
         'sex'            => 'required|in:male,female',
-        'phone_number'   => 'required|string|max:20',
+        'phone_number'   => 'required|string|min:11|max:11',
         'email'          => 'required|email|unique:useraccount,email,' . $user->id,
         'Umunicipality'  => 'required|string|max:255',
         'Ubarangay'      => 'required|string|max:255',
         'Ustreet_house'  => 'required|string|max:255',
-        'contact_person' => 'required|string|max:255',
-        'contact_number' => 'required|string|max:20',
+        'contact_person' => 'required|string|max:11|min:11',
+        'contact_number' => 'required|string|min:11|max:11',
     ]);
 
     // If the account is OAuth-linked, don't let them silently change the
