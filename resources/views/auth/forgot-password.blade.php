@@ -120,7 +120,7 @@
       </form>
 
       <div class="text-center mt-3">
-        <a href="{{ route('login.register') }}" class="small" style="color: rgba(255,255,255,0.85);">
+        <a href="{{ route('login') }}" class="small" style="color: rgba(255,255,255,0.85);">
           <i class="bi bi-arrow-left"></i> Back to Log In
         </a>
       </div>
