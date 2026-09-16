@@ -527,7 +527,7 @@
           </div>
           <div class="col-4">
             <div class="stat-badge glass-card">
-              <div class="num" data-target="100">0</div>
+              <div class="num" data-target="20">0</div>
               <p>Tests Available</p>
             </div>
           </div>
