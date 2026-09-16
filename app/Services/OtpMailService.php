@@ -31,7 +31,7 @@ class OtpMailService
                 ['email' => $toEmail, 'name' => $toName],
             ],
             'subject' => 'Your Password Reset Code',
-            'htmlContent' => view('emails.otp', [
+            'htmlContent' => view('verify-otp', [
                 'otp' => $otp,
                 'name' => $toName,
             ])->render(),
