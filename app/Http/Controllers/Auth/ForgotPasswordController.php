@@ -156,7 +156,7 @@ class ForgotPasswordController extends Controller
         PasswordResetOtp::where('email', $email)->delete();
         session()->forget(['password_reset_email', 'password_reset_verified']);
 
-        return redirect()->route('login.register')
+        return redirect()->route('login')
             ->with('status', 'Your password has been reset. Please log in.');
     }
 }
