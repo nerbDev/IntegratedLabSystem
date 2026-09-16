@@ -330,7 +330,7 @@
                 </div>
                 <div class="lrb-field">
                     <div class="lrb-field-label">Sex</div>
-                    <select class="lrb-select" onchange="syncField('sex', this.value)">
+                    <select class="lrb-select" id="f-sex" onchange="syncField('sex', this.value)">
                         <option value="">—</option>
                         <option {{ ($appointment->sex ?? '') == 'Male'   ? 'selected' : '' }}>Male</option>
                         <option {{ ($appointment->sex ?? '') == 'Female' ? 'selected' : '' }}>Female</option>
@@ -362,7 +362,7 @@
                 </div>
                 <div class="lrb-field">
                     <div class="lrb-field-label">Service / Test Type</div>
-                    <select class="lrb-select" onchange="changeService(this.value)">
+                    <select class="lrb-select" id="f-service" onchange="changeService(this.value)">
                         @foreach($services as $svc)
                             <option value="{{ $svc }}"
                                 {{ ($appointment->service ?? '') == $svc ? 'selected' : '' }}>
@@ -538,141 +538,167 @@
 </div>
 
 <script>
-const TEMPLATES = {
-    "Complete Blood Count": [
-        { title: "Hematology", rows: [
-            { test:"Hemoglobin",    unit:"g/dL",       ref:"M: 13.5–17.5 | F: 12.0–16.0" },
-            { test:"Hematocrit",    unit:"%",           ref:"M: 41–53 | F: 36–46" },
-            { test:"RBC Count",     unit:"×10⁶/μL",    ref:"M: 4.5–5.9 | F: 4.0–5.2" },
-            { test:"WBC Count",     unit:"×10³/μL",    ref:"4.5–11.0" },
-            { test:"Platelet Count",unit:"×10³/μL",    ref:"150–400" },
-            { test:"MCV",           unit:"fL",          ref:"80–100" },
-            { test:"MCH",           unit:"pg",          ref:"27–33" },
-            { test:"MCHC",          unit:"g/dL",        ref:"32–36" },
+// ── Individual test definitions (shared across packages) ───
+const TESTS = {
+    fbs:       { test:"Fasting Blood Sugar (FBS)", unit:"mg/dL",  ref:"70–100" },
+    chol:      { test:"Total Cholesterol",         unit:"mg/dL",  ref:"< 200" },
+    trig:      { test:"Triglycerides",             unit:"mg/dL",  ref:"< 150" },
+    hdl:       { test:"HDL Cholesterol",           unit:"mg/dL",  ref:"M: > 40 | F: > 50" },
+    ldl:       { test:"LDL Cholesterol",           unit:"mg/dL",  ref:"< 100" },
+    bun:       { test:"BUN",                       unit:"mg/dL",  ref:"7–20" },
+    crea:      { test:"Creatinine",                unit:"mg/dL",  ref:"M: 0.7–1.2 | F: 0.5–1.0" },
+    bua:       { test:"Uric Acid (BUA)",           unit:"mg/dL",  ref:"M: 3.5–7.2 | F: 2.6–6.0" },
+    sgpt:      { test:"ALT (SGPT)",                unit:"U/L",    ref:"M: 7–56 | F: 7–35" },
+    sgot:      { test:"AST (SGOT)",                unit:"U/L",    ref:"10–40" },
+    tsh:       { test:"TSH",                       unit:"mIU/L",  ref:"0.4–4.0" },
+    ft3:       { test:"Free T3 (FT3)",             unit:"pmol/L", ref:"3.5–6.5" },
+    ft4:       { test:"Free T4 (FT4)",             unit:"pmol/L", ref:"10.0–20.0" },
+    na:        { test:"Sodium (Na)",               unit:"mmol/L", ref:"135–145" },
+    k:         { test:"Potassium (K)",             unit:"mmol/L", ref:"3.5–5.1" },
+    cl:        { test:"Chloride (Cl)",              unit:"mmol/L", ref:"98–107" },
+    hbsag:     { test:"HBsAg",                      unit:"—",      ref:"Non-reactive" },
+    rprvdrl:   { test:"RPR/VDRL",                   unit:"—",      ref:"Non-reactive" },
+    hiv:       { test:"HIV (Screening)",            unit:"—",      ref:"Non-reactive" },
+    bloodtype: { test:"Blood Type & Rh Factor",     unit:"—",      ref:"—" },
+};
+
+// ── Reusable multi-row panels ────────────────────────────────
+function cbcSections() {
+    return [
+        { title:"Hematology", rows:[
+            { test:"Hemoglobin",     unit:"g/dL",     ref:"M: 13.5–17.5 | F: 12.0–16.0" },
+            { test:"Hematocrit",     unit:"%",        ref:"M: 41–53 | F: 36–46" },
+            { test:"RBC Count",      unit:"×10⁶/μL",  ref:"M: 4.5–5.9 | F: 4.0–5.2" },
+            { test:"WBC Count",      unit:"×10³/μL",  ref:"4.5–11.0" },
+            { test:"Platelet Count", unit:"×10³/μL",  ref:"150–400" },
+            { test:"MCV",            unit:"fL",       ref:"80–100" },
+            { test:"MCH",            unit:"pg",       ref:"27–33" },
+            { test:"MCHC",           unit:"g/dL",     ref:"32–36" },
         ]},
-        { title: "Differential Count", rows: [
-            { test:"Neutrophils",   unit:"%", ref:"50–70" },
-            { test:"Lymphocytes",   unit:"%", ref:"20–40" },
-            { test:"Monocytes",     unit:"%", ref:"2–8" },
-            { test:"Eosinophils",   unit:"%", ref:"1–4" },
-            { test:"Basophils",     unit:"%", ref:"0.5–1" },
+        { title:"Differential Count", rows:[
+            { test:"Neutrophils", unit:"%", ref:"50–70" },
+            { test:"Lymphocytes", unit:"%", ref:"20–40" },
+            { test:"Monocytes",   unit:"%", ref:"2–8" },
+            { test:"Eosinophils", unit:"%", ref:"1–4" },
+            { test:"Basophils",   unit:"%", ref:"0.5–1" },
         ]},
-    ],
-    "Urinalysis": [
-        { title: "Physical Examination", rows: [
-            { test:"Color",           unit:"—", ref:"Yellow" },
-            { test:"Transparency",    unit:"—", ref:"Clear" },
-            { test:"Specific Gravity",unit:"—", ref:"1.005–1.030" },
-            { test:"pH",              unit:"—", ref:"4.5–8.0" },
+    ];
+}
+
+function urinalysisSections() {
+    return [
+        { title:"Physical Examination", rows:[
+            { test:"Color",            unit:"—", ref:"Yellow" },
+            { test:"Transparency",     unit:"—", ref:"Clear" },
+            { test:"Specific Gravity", unit:"—", ref:"1.005–1.030" },
+            { test:"pH",               unit:"—", ref:"4.5–8.0" },
         ]},
-        { title: "Chemical Examination", rows: [
-            { test:"Protein",              unit:"—", ref:"Negative" },
-            { test:"Glucose",              unit:"—", ref:"Negative" },
-            { test:"Ketones",              unit:"—", ref:"Negative" },
-            { test:"Blood",                unit:"—", ref:"Negative" },
-            { test:"Bilirubin",            unit:"—", ref:"Negative" },
-            { test:"Nitrite",              unit:"—", ref:"Negative" },
-            { test:"Leukocyte Esterase",   unit:"—", ref:"Negative" },
+        { title:"Chemical Examination", rows:[
+            { test:"Protein",            unit:"—", ref:"Negative" },
+            { test:"Glucose",            unit:"—", ref:"Negative" },
+            { test:"Ketones",            unit:"—", ref:"Negative" },
+            { test:"Blood",              unit:"—", ref:"Negative" },
+            { test:"Bilirubin",          unit:"—", ref:"Negative" },
+            { test:"Nitrite",            unit:"—", ref:"Negative" },
+            { test:"Leukocyte Esterase", unit:"—", ref:"Negative" },
         ]},
-        { title: "Microscopic Examination", rows: [
-            { test:"RBC",             unit:"/hpf", ref:"0–2" },
-            { test:"WBC",             unit:"/hpf", ref:"0–5" },
-            { test:"Epithelial Cells",unit:"/hpf", ref:"Few" },
-            { test:"Bacteria",        unit:"—",    ref:"None" },
-            { test:"Casts",           unit:"—",    ref:"None seen" },
-            { test:"Crystals",        unit:"—",    ref:"None seen" },
+        { title:"Microscopic Examination", rows:[
+            { test:"RBC",              unit:"/hpf", ref:"0–2" },
+            { test:"WBC",              unit:"/hpf", ref:"0–5" },
+            { test:"Epithelial Cells", unit:"/hpf", ref:"Few" },
+            { test:"Bacteria",         unit:"—",    ref:"None" },
+            { test:"Casts",            unit:"—",    ref:"None seen" },
+            { test:"Crystals",         unit:"—",    ref:"None seen" },
         ]},
-    ],
-    "Blood Chemistry": [
-        { title: "Glucose", rows: [
-            { test:"Fasting Blood Sugar",    unit:"mg/dL", ref:"70–100" },
-            { test:"2-Hour Post Prandial",   unit:"mg/dL", ref:"< 140" },
-            { test:"HbA1c",                  unit:"%",     ref:"< 5.7" },
-        ]},
-        { title: "Lipid Profile", rows: [
-            { test:"Total Cholesterol", unit:"mg/dL", ref:"< 200" },
-            { test:"HDL Cholesterol",   unit:"mg/dL", ref:"M: > 40 | F: > 50" },
-            { test:"LDL Cholesterol",   unit:"mg/dL", ref:"< 100" },
-            { test:"Triglycerides",     unit:"mg/dL", ref:"< 150" },
-            { test:"VLDL",              unit:"mg/dL", ref:"2–30" },
-        ]},
-        { title: "Renal Function", rows: [
-            { test:"Creatinine", unit:"mg/dL", ref:"M: 0.7–1.2 | F: 0.5–1.0" },
-            { test:"BUN",        unit:"mg/dL", ref:"7–20" },
-            { test:"Uric Acid",  unit:"mg/dL", ref:"M: 3.5–7.2 | F: 2.6–6.0" },
-        ]},
-        { title: "Liver Function", rows: [
-            { test:"ALT (SGPT)",          unit:"U/L",   ref:"M: 7–56 | F: 7–35" },
-            { test:"AST (SGOT)",          unit:"U/L",   ref:"10–40" },
-            { test:"Total Bilirubin",     unit:"mg/dL", ref:"0.2–1.2" },
-            { test:"Direct Bilirubin",    unit:"mg/dL", ref:"0.0–0.3" },
-            { test:"Alkaline Phosphatase",unit:"U/L",   ref:"44–147" },
-            { test:"Total Protein",       unit:"g/dL",  ref:"6.3–8.2" },
-            { test:"Albumin",             unit:"g/dL",  ref:"3.5–5.0" },
-        ]},
-    ],
-    "Thyroid Function Test": [
-        { title: "Thyroid Panel", rows: [
-            { test:"TSH",               unit:"mIU/L",  ref:"0.4–4.0" },
-            { test:"Free T3 (FT3)",     unit:"pmol/L", ref:"3.5–6.5" },
-            { test:"Free T4 (FT4)",     unit:"pmol/L", ref:"10.0–20.0" },
-            { test:"Total T3",          unit:"nmol/L", ref:"1.1–2.9" },
-            { test:"Total T4",          unit:"nmol/L", ref:"60–150" },
-            { test:"Anti-TPO Antibody", unit:"IU/mL",  ref:"< 34" },
-        ]},
-    ],
-    "Stool Examination": [
-        { title: "Macroscopic Examination", rows: [
+    ];
+}
+
+function fecalysisSections() {
+    return [
+        { title:"Macroscopic Examination", rows:[
             { test:"Color",        unit:"—", ref:"Brown" },
             { test:"Consistency",  unit:"—", ref:"Formed" },
             { test:"Mucus",        unit:"—", ref:"None" },
             { test:"Blood",        unit:"—", ref:"None" },
             { test:"Occult Blood", unit:"—", ref:"Negative" },
         ]},
-        { title: "Microscopic Examination", rows: [
-            { test:"WBC",          unit:"/hpf", ref:"None" },
-            { test:"RBC",          unit:"/hpf", ref:"None" },
-            { test:"Fat Globules", unit:"—",    ref:"None" },
-            { test:"Yeast Cells",  unit:"—",    ref:"None" },
-            { test:"Ova/Parasites",unit:"—",    ref:"None seen" },
+        { title:"Microscopic Examination", rows:[
+            { test:"WBC",           unit:"/hpf", ref:"None" },
+            { test:"RBC",           unit:"/hpf", ref:"None" },
+            { test:"Fat Globules",  unit:"—",    ref:"None" },
+            { test:"Yeast Cells",   unit:"—",    ref:"None" },
+            { test:"Ova/Parasites", unit:"—",    ref:"None seen" },
+        ]},
+    ];
+}
+
+// prefixes section titles so e.g. CBC's "Microscopic Examination"
+// doesn't visually collide with Urinalysis's section of the same name
+function prefixed(sections, label) {
+    return sections.map(s => ({ ...s, title: `${label} — ${s.title}` }));
+}
+
+// ── Actual SMH Lab services/packages ─────────────────────────
+const TEMPLATES = {
+    "CHEM 5": [
+        { title:"Chemistry Panel", rows:[TESTS.fbs, TESTS.chol, TESTS.trig, TESTS.hdl, TESTS.ldl] },
+    ],
+    "CHEM 9": [
+        { title:"Chemistry Panel", rows:[
+            TESTS.fbs, TESTS.chol, TESTS.trig, TESTS.hdl, TESTS.ldl,
+            TESTS.bun, TESTS.crea, TESTS.bua, TESTS.sgpt,
         ]},
     ],
-    "Pregnancy Test": [
-        { title: "Result", rows: [
-            { test:"Serum β-hCG",             unit:"mIU/mL", ref:"Non-pregnant: < 5" },
-            { test:"Urine hCG (Qualitative)", unit:"—",      ref:"Negative" },
+    "CHEM 10": [
+        { title:"Chemistry Panel", rows:[
+            TESTS.fbs, TESTS.chol, TESTS.trig, TESTS.hdl, TESTS.ldl,
+            TESTS.bun, TESTS.crea, TESTS.bua, TESTS.sgpt, TESTS.sgot,
         ]},
     ],
-    "X-Ray": [
-        { title: "Radiological Findings", rows: [
-            { test:"View",                unit:"—", ref:"PA / Lateral / AP" },
-            { test:"Lung Fields",         unit:"—", ref:"Clear" },
-            { test:"Heart Size",          unit:"—", ref:"Normal" },
-            { test:"Mediastinum",         unit:"—", ref:"Not widened" },
-            { test:"Diaphragm",           unit:"—", ref:"Normal" },
-            { test:"Costophrenic Angles", unit:"—", ref:"Sharp" },
-            { test:"Bony Structures",     unit:"—", ref:"Intact" },
-        ]},
-        { title: "Impression", rows: [
-            { test:"Radiologist Impression", unit:"—", ref:"—" },
+    "General Package": [
+        ...prefixed(cbcSections(), "CBC"),
+        ...prefixed(urinalysisSections(), "Urinalysis"),
+        ...prefixed(fecalysisSections(), "Fecalysis"),
+        { title:"Chemistry Panel", rows:[
+            TESTS.fbs, TESTS.chol, TESTS.trig, TESTS.hdl, TESTS.ldl,
+            TESTS.bun, TESTS.crea, TESTS.bua, TESTS.sgpt, TESTS.sgot,
         ]},
     ],
-    "ECG / EKG": [
-        { title: "ECG Measurements", rows: [
-            { test:"Heart Rate",      unit:"bpm", ref:"60–100" },
-            { test:"PR Interval",     unit:"ms",  ref:"120–200" },
-            { test:"QRS Duration",    unit:"ms",  ref:"< 120" },
-            { test:"QT/QTc Interval", unit:"ms",  ref:"< 440" },
-            { test:"P Wave",          unit:"—",   ref:"Normal" },
-            { test:"T Wave",          unit:"—",   ref:"Normal" },
-            { test:"ST Segment",      unit:"—",   ref:"Isoelectric" },
-            { test:"Rhythm",          unit:"—",   ref:"Normal Sinus Rhythm" },
-            { test:"Axis",            unit:"°",   ref:"−30° to +90°" },
-        ]},
+    "Thyroid Test": [
+        { title:"Thyroid Panel", rows:[TESTS.tsh, TESTS.ft3, TESTS.ft4] },
+    ],
+    "Electrolytes Package": [
+        { title:"Electrolytes", rows:[TESTS.na, TESTS.k, TESTS.cl] },
+    ],
+    "Pre-Employment Package A": [
+        ...prefixed(cbcSections(), "CBC"),
+        ...prefixed(urinalysisSections(), "Urinalysis"),
+        ...prefixed(fecalysisSections(), "Fecalysis"),
+        { title:"Serology", rows:[TESTS.hbsag] },
+    ],
+    "Pre-Employment Package B": [
+        { title:"Chemistry", rows:[TESTS.fbs] },
+        ...prefixed(urinalysisSections(), "Urinalysis"),
+        ...prefixed(fecalysisSections(), "Fecalysis"),
+        { title:"Serology", rows:[TESTS.hbsag] },
+    ],
+    "Buntis Package A": [
+        { title:"Chemistry", rows:[TESTS.fbs] },
+        ...prefixed(cbcSections(), "CBC"),
+        { title:"Blood Bank", rows:[TESTS.bloodtype] },
+        { title:"Serology", rows:[TESTS.hbsag, TESTS.rprvdrl, TESTS.hiv] },
+        ...prefixed(urinalysisSections(), "Urinalysis"),
+    ],
+    "Buntis Package B": [
+        { title:"Chemistry", rows:[TESTS.fbs] },
+        ...prefixed(cbcSections(), "CBC"),
+        { title:"Blood Bank", rows:[TESTS.bloodtype] },
+        { title:"Serology", rows:[TESTS.hbsag, TESTS.rprvdrl] },
+        ...prefixed(urinalysisSections(), "Urinalysis"),
     ],
 };
 
-let currentService = document.querySelector('.lrb-select').value || Object.keys(TEMPLATES)[0];
+let currentService = document.getElementById('f-service').value || Object.keys(TEMPLATES)[0];
 let isPreview = false;
 
 function buildTables(service) {

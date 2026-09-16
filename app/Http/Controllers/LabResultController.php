@@ -12,16 +12,18 @@ class LabResultController extends Controller
      * Add or remove entries here to automatically update
      * both the dropdown and the JS template map.
      */
-    protected array $services = [
-        'Complete Blood Count',
-        'Urinalysis',
-        'Blood Chemistry',
-        'Thyroid Function Test',
-        'Stool Examination',
-        'Pregnancy Test',
-        'X-Ray',
-        'ECG / EKG',
-    ];
+        protected array $services = [
+            'CHEM 5',
+            'CHEM 9',
+            'CHEM 10',
+            'General Package',
+            'Thyroid Test',
+            'Electrolytes Package',
+            'Pre-Employment Package A',
+            'Pre-Employment Package B',
+            'Buntis Package A',
+            'Buntis Package B',
+        ];
 
     /**
      * Show the lab result builder for a specific appointment.
