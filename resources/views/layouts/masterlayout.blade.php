@@ -135,24 +135,9 @@
         <a href="{{ route('staffdashboard') }}" class="{{ request()->routeIs('staffdashboard') ? 'active' : '' }}">
           <i class="bi bi-speedometer2 me-2"></i> Overview
         </a>
-        <a href="{{ route('appointments.requests') }}" class="{{ request()->routeIs('requests') ? 'active' : '' }}">
-          <i class="bi bi-envelope me-2"></i> Appointment Requests
-        </a>
-        <a href="{{ route('staff.transactions') }}" class="{{ request()->routeIs('staff.transactions') ? 'active' : '' }}">
-          <i class="bi bi-clock-history me-2"></i> My Transactions
-        </a>
       @else
         <a href="{{ url('/patientdashboard') }}" class="{{ request()->is('patientdashboard') ? 'active' : '' }}">
           <i class="bi bi-house-door me-2"></i> Home
-        </a>
-        <a href="{{ route('patient.appointments') }}" class="{{ request()->routeIs('patient.appointments') ? 'active' : '' }}">
-          <i class="bi bi-calendar3 me-2"></i> My Appointments
-        </a>
-        <a href="{{ url('/appointment') }}" class="{{ request()->is('appointment.form') ? 'active' : '' }}">
-          <i class="bi bi-plus-circle me-2"></i> Book Appointment
-        </a>
-        <a href="{{ route('patient.transactions') }}" class="{{ request()->routeIs('patient.transactions') ? 'active' : '' }}">
-          <i class="bi bi-clock-history me-2"></i> My Transactions
         </a>
       @endif
     </div>

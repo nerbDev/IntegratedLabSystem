@@ -4,21 +4,40 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
 {
-    public function handle(Request $request, Closure $next, string $role)
+    /**
+     * Usage: role:admin  or  role:admin,staff
+     */
+    public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        if (!Auth::check()) {
-            return redirect('/login');
+        // Not logged in -> login page
+        if (! auth()->check()) {
+            return redirect()->route('login');
         }
 
-        // Check role from UserAccount model
-        if (Auth::user()->role !== $role) {
-            abort(403, 'Unauthorized access');
+        $user = auth()->user();
+
+        // Role allowed -> continue
+        if (in_array($user->role, $roles)) {
+            return $next($request);
         }
 
-        return $next($request);
+        // Role not allowed -> stay on the last page (no 403)
+        $last = session('last_page');
+
+        if ($last && $last !== $request->fullUrl()) {
+            return redirect($last);
+        }
+
+        // No last page yet -> send to their own dashboard
+        return match ($user->role) {
+            'admin'   => redirect()->route('admindashboard'),
+            'staff'   => redirect()->route('staffdashboard'),
+            'patient' => redirect()->route('patientdashboard'),
+            default   => redirect()->route('welcome'),
+        };
     }
 }

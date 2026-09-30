@@ -335,3 +335,22 @@ Route::get('/cron/run-tasks/{secret}', function ($secret) {
     ]);
     
 });
+
+
+// fallback func
+Route::fallback(function () {
+    if (auth()->check()) {
+        if ($last = session('last_page')) {
+            return redirect($last);
+        }
+
+        return match (auth()->user()->role) {
+            'admin'   => redirect()->route('admindashboard'),
+            'staff'   => redirect()->route('staffdashboard'),
+            'patient' => redirect()->route('patientdashboard'),
+            default   => redirect()->route('welcome'),
+        };
+    }
+
+    return redirect()->route('login');
+});

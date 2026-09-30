@@ -106,8 +106,6 @@
     <div class="sidebar" id="sidebar">
       <h4 class="text-center mb-4">Menu</h4>
       <a href="{{ url('/admindashboard') }}"><i class="bi bi-speedometer2 me-2"></i> Overview</a>
-      <a href="{{ route('admin.appointments.index') }}"><i class="bi bi-calendar-event me-2"></i> Appointments</a>
-      <a href="#"><i class="bi bi-people me-2"></i> Patients</a>
     </div>
     <div class="content-area">
       @yield('admincontent')
