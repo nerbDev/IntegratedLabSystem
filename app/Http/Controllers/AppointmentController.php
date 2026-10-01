@@ -138,7 +138,7 @@ class AppointmentController extends Controller
             'first_name'       => 'required','string','max:255','regex:/^[\pL\s\'-]+$/u',
             'middle_name'      => 'required','string','max:255','regex:/^[\pL\s\'-]+$/u',
             'last_name'        => 'required','string','max:255','regex:/^[\pL\s\'-]+$/u',
-            'suffix'           => 'required','string','max:255','regex:/^[\pL\s\'-]+$/u',
+            'suffix'           => 'string','max:255','regex:/^[\pL\s\'-]+$/u',
             'email'            => 'required|email|unique:useraccount,email',
             'phone'            => 'required|digits:11',
             'municipality'     => 'required|string|max:255',
