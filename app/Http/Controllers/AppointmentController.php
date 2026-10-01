@@ -131,20 +131,20 @@ class AppointmentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'service'          => 'required|string',
-            'appointment_type'     => 'required|string',
+            'service'          => 'required','string','max:255','regex:/^[\pL\s\'-]+$/u',
+            'appointment_type'     => 'required','string','max:255','regex:/^[\pL\s\'-]+$/u',
             'appointment_date' => 'required|date|after_or_equal:today',
             'appointment_time' => 'required',
-            'first_name'       => 'required|string|max:255',
-            'middle_name'      => 'nullable|string|max:255',
-            'last_name'        => 'required|string|max:255',
-            'suffix'           => 'nullable|string|max:50',
-            'email'            => 'required|email',
-            'phone'            => 'required|string',
-            'municipality'     => 'required|string',
-            'barangay'         => 'required|string',
-            'street_details'   => 'required|string',
-            'landmark'         => 'required|string',
+            'first_name'       => 'required','string','max:255','regex:/^[\pL\s\'-]+$/u',
+            'middle_name'      => 'required','string','max:255','regex:/^[\pL\s\'-]+$/u',
+            'last_name'        => 'required','string','max:255','regex:/^[\pL\s\'-]+$/u',
+            'suffix'           => 'required','string','max:255','regex:/^[\pL\s\'-]+$/u',
+            'email'            => 'required|email|unique:useraccount,email',
+            'phone'            => 'required|digits:11',
+            'municipality'     => 'required|string|max:255',
+            'barangay'         => 'required|string|max:255',
+            'street_details'   => 'required|string|max:255',
+            'landmark'         => 'required|string|max:255',
         ]);
 
         // Guard against booking a staff-blocked date (belt-and-suspenders —
