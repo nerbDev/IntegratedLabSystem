@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Models\ActivityLog;
 use App\Models\UserAccount;
+use App\Models\ArchivedAppointment;
 
 class AppointmentController extends Controller
 {
@@ -156,6 +157,13 @@ class AppointmentController extends Controller
                 ->withErrors(['appointment_date' => 'This date is unavailable for booking. Please choose another day.']);
         }
 
+        // Block times that have already passed today (Manila time)
+        if ($this->isPastSlot($request->appointment_date, $request->appointment_time)) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['appointment_time' => 'That time has already passed. Please choose a later time.']);
+        }
+
         $formattedTime = Carbon::parse($request->appointment_time)->format('H:i:s');
 
         $appointment = Appointment::create([
@@ -247,6 +255,22 @@ class AppointmentController extends Controller
                 ? Carbon::parse($request->appointment_time)->format('H:i:s') 
                 : $appointment->appointment_time;
 
+        // Only validate when staff actually change the date/time (so approving
+        // or completing an old appointment doesn't get blocked)
+        $dateChanged = $request->has('appointment_date')
+            && Carbon::parse($request->appointment_date)->format('Y-m-d')
+               !== Carbon::parse($appointment->appointment_date)->format('Y-m-d');
+
+        $timeChanged = $request->has('appointment_time')
+            && Carbon::parse($request->appointment_time)->format('H:i:s')
+               !== Carbon::parse($appointment->appointment_time)->format('H:i:s');
+
+        if (($dateChanged || $timeChanged) && $this->isPastSlot($date, $time)) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['appointment_time' => 'You cannot reschedule to a time that has already passed.']);
+        }
+
         $appointment->update([
             'appointment_date' => $date,
             'appointment_time' => $time,
@@ -329,6 +353,22 @@ class AppointmentController extends Controller
     {
         $role = Auth::user()->role ?? 'User';
         return ucfirst($role);
+    }
+
+    /**
+     * Returns true if the given date + time is already in the past (Manila time).
+     * The app timezone is UTC, so we compare explicitly in Asia/Manila.
+     */
+    private function isPastSlot($date, $time): bool
+    {
+        $tz = 'Asia/Manila';
+
+        $slot = Carbon::parse(
+            Carbon::parse($date)->format('Y-m-d') . ' ' . Carbon::parse($time)->format('H:i:s'),
+            $tz
+        );
+
+        return $slot->lessThanOrEqualTo(Carbon::now($tz));
     }
 
 
