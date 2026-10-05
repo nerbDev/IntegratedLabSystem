@@ -344,6 +344,26 @@ class AppointmentController extends Controller
 
         return view('SSappointmentschedule', compact('approvedAppointments'));
     }
+// for the staff to see the list of "cancelled" schedules
+        public function cancelledSchedule()
+    {
+        $cancelledAppointments = Appointment::where('status', 'cancelled')
+            ->orderByDesc('appointment_date')
+            ->orderByDesc('appointment_time')
+            ->get();
+
+        return view('SScancelledappointments', compact('cancelledAppointments'));
+    }
+// for the staff to see the list of "rescheduled" schedules
+    public function rescheduledSchedule()
+    {
+        $rescheduledAppointments = Appointment::where('status', 'rescheduled')
+            ->orderByDesc('appointment_date')
+            ->orderByDesc('appointment_time')
+            ->get();
+
+        return view('SSrescheduledappointments', compact('rescheduledAppointments'));
+    }
 
     /**
      * Small helper to describe who performed the action in log messages

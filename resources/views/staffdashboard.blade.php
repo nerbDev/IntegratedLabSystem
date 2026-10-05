@@ -17,7 +17,6 @@
       font-family: Arial, sans-serif;
       color: #fff;
       min-height: 100vh;
-      /* Changed to auto to allow the content area to scroll correctly */
       overflow-x: hidden;
       overflow-y: auto;
     }
@@ -44,7 +43,6 @@
 
     /* HEADER */
     .header {
-      /* FIXED POSITIONING */
       position: sticky;
       top: 0;
       z-index: 1100;
@@ -103,8 +101,7 @@
     /* MAIN */
     .main-content {
       display: flex;
-      /* Ensure it takes up remaining space */
-      min-height: calc(100vh - 81px); 
+      min-height: calc(100vh - 81px);
     }
 
     /* SIDEBAR */
@@ -117,7 +114,6 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      /* FIXED POSITIONING */
       position: sticky;
       top: 81px;
       height: calc(100vh - 81px);
@@ -144,14 +140,14 @@
       border: 1px solid rgba(0, 212, 255, 0.5);
     }
 
-    /* SETTINGS / MANAGE DROPDOWN */
+    /* SETTINGS / APPOINTMENTS DROPDOWNS */
     .sidebar-dropdown-toggle {
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
     }
-    .sidebar-dropdown-toggle i.bi-gear {
+    .sidebar-dropdown-toggle > i:first-child {
       margin-right: 8px;
     }
     .sidebar-dropdown-caret {
@@ -189,6 +185,7 @@
     .content-area {
       flex: 1;
       padding: 40px;
+      min-width: 0;
     }
 
     /* GLASS CARDS (For Overview) */
@@ -346,8 +343,8 @@
 
     @media (max-width: 768px) {
       .mobile-toggle { display: block; }
-      
-      .welcome-text { display: none; } /* Hide text on small screens for space */
+
+      .welcome-text { display: none; }
 
       .sidebar {
         position: fixed;
@@ -356,7 +353,6 @@
         z-index: 1050;
         transform: translateX(-100%);
         width: 280px;
-        /* MOBILE GLASSMORPHISM */
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(25px);
         box-shadow: 10px 0 30px rgba(0,0,0,0.5);
@@ -421,8 +417,6 @@
       <span class="logo-text">Subic Med Health</span>
     </div>
 
- 
-
     <div class="profile-dropdown">
       <i class="bi bi-person-circle" style="font-size: 22px;"></i>
       <div class="profile-dropdown-content">
@@ -445,12 +439,38 @@
       <a href="{{ route('staff.transactions') }}" class="{{ request()->routeIs('staff.transactions') ? 'active' : '' }}">
         <i class="bi bi-clock-history me-2"></i> My Transactions
       </a>
-    <a href="{{ route('staff.appointments.approved') }}" class="{{ request()->routeIs('staff.appointments.approved') ? 'active' : '' }}">
-        <i class="bi bi-calendar-check"></i> Appointment Schedule
-    </a>
-    <a href="{{ route('appointments.requests') }}" class="{{ request()->routeIs('appointments.requests') ? 'active' : '' }}">
-      <i class="bi bi-envelope"></i> Appointment Requests
-    </a>
+
+      {{-- Appointments dropdown --}}
+      @php
+          $appointmentRoutes = [
+              'staff.appointments.approved',
+              'staff.appointments.cancelled',
+              'staff.appointments.rescheduled',
+              'appointments.requests',
+          ];
+          $appointmentsActive = request()->routeIs($appointmentRoutes);
+      @endphp
+
+      <a href="#" class="sidebar-dropdown-toggle {{ $appointmentsActive ? 'active' : '' }}"
+         onclick="event.preventDefault(); toggleSidebarDropdown(this)">
+          <i class="bi bi-calendar-week"></i> Appointments
+          <i class="bi bi-chevron-down sidebar-dropdown-caret {{ $appointmentsActive ? 'open' : '' }}"></i>
+      </a>
+
+      <div class="sidebar-submenu {{ $appointmentsActive ? 'open' : '' }}">
+          <a href="{{ route('staff.appointments.approved') }}" class="{{ request()->routeIs('staff.appointments.approved') ? 'active' : '' }}">
+              <i class="bi bi-calendar-check"></i> Approved Schedule
+          </a>
+          <a href="{{ route('staff.appointments.cancelled') }}" class="{{ request()->routeIs('staff.appointments.cancelled') ? 'active' : '' }}">
+              <i class="bi bi-calendar-x"></i> Cancelled Requests
+          </a>
+          <a href="{{ route('staff.appointments.rescheduled') }}" class="{{ request()->routeIs('staff.appointments.rescheduled') ? 'active' : '' }}">
+              <i class="bi bi-calendar2-week"></i> Re-scheduled Requests
+          </a>
+          <a href="{{ route('appointments.requests') }}" class="{{ request()->routeIs('appointments.requests') ? 'active' : '' }}">
+              <i class="bi bi-envelope"></i> Pending Requests
+          </a>
+      </div>
 
       {{-- Settings / Manage dropdown --}}
       @php
@@ -640,16 +660,14 @@
 
     // Global Click Listener to close menus
     document.addEventListener('click', (e) => {
-      // Close profile dropdown
       dropdownContent.style.display = 'none';
-      
-      // Close sidebar on mobile if clicking outside
+
       if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
         sidebar.classList.remove('active');
       }
     });
 
-    // Settings / Manage sidebar dropdown
+    // Sidebar dropdowns (Appointments + Settings/Manage)
     function toggleSidebarDropdown(el) {
       const submenu = el.nextElementSibling;
       const caret = el.querySelector('.sidebar-dropdown-caret');

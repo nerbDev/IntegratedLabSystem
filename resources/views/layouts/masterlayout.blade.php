@@ -22,22 +22,22 @@
       padding: 15px 30px; background: rgba(255,255,255,0.1); backdrop-filter: blur(15px);
       border-bottom: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
-    .logo-section { display: flex; align-items: center; gap: 10px; }
-    .logo-section img { width: 45px; }
-    .welcome-text { font-weight: 500; letter-spacing: 0.5px; }
 
-    .menu-toggle {
-        display: none;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white;
-        padding: 5px 12px;
-        border-radius: 8px;
-        font-size: 1.2rem;
-        cursor: pointer;
-        transition: 0.3s;
+    /* LOGO = RETURN BUTTON */
+    .logo-section { display: flex; align-items: center; }
+    .logo-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 4px 10px 4px 4px; border-radius: 12px;
+      color: #fff; text-decoration: none; cursor: pointer;
+      transition: background 0.25s ease, transform 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
     }
-    .menu-toggle:hover { background: rgba(255, 255, 255, 0.2); }
+    .logo-link:hover { background: rgba(255,255,255,0.15); color: #fff; }
+    .logo-link:active { transform: scale(0.96); }
+    .logo-link:focus-visible { outline: 2px solid #00d4ff; outline-offset: 2px; }
+    .logo-link img { width: 45px; }
+
+    .welcome-text { font-weight: 500; letter-spacing: 0.5px; }
 
     .profile-dropdown { position: relative; cursor: pointer; }
     .profile-dropdown-content {
@@ -46,61 +46,40 @@
       min-width: 180px; border-radius: 10px; z-index: 9999; margin-top: 10px;
     }
 
-    .main-content { display: flex; height: calc(100vh - 81px); position: relative; }
-
-    .sidebar {
-      width: 260px; padding: 25px 20px; background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(15px); border-right: 1px solid rgba(255,255,255,0.1);
-      display: flex; flex-direction: column; gap: 8px;
-      transition: all 0.3s ease;
-      z-index: 1040;
-    }
-    .sidebar a {
-      color: rgba(255,255,255,0.8); text-decoration: none; padding: 12px 15px; border-radius: 10px;
-      transition: all 0.3s ease; display: flex; align-items: center;
-    }
-    .sidebar a:hover { background: rgba(255,255,255,0.1); color: #fff; }
-    .sidebar a.active {
-        background: rgba(0, 212, 255, 0.2); color: #00d4ff;
-        border: 1px solid rgba(0, 212, 255, 0.3); font-weight: 600;
-    }
-
-    .content-area { flex: 1; padding: 30px; overflow-y: auto; transition: 0.3s; }
+    /* FULL-WIDTH CONTENT (no sidebar) */
+    .main-content { height: calc(100vh - 81px); }
+    .content-area { height: 100%; padding: 30px; overflow-y: auto; }
 
     .content-area::-webkit-scrollbar { width: 8px; }
     .content-area::-webkit-scrollbar-track { background: transparent; }
     .content-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
     @media (max-width: 991.98px) {
-        .menu-toggle { display: block; }
-        .sidebar {
-            position: absolute;
-            left: -260px;
-            height: 100%;
-        }
-        .sidebar.show {
-            left: 0;
-            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
-        }
         .welcome-text { font-size: 0.9rem; }
-        .logo-text { display: none; }
+        .content-area { padding: 20px 15px; }
+    }
+    @media (max-width: 575.98px) {
+        .logo-text { font-size: 0.95rem; }
     }
   </style>
 </head>
 <body>
 
+  @php
+      $isStaffSide = in_array(auth()->user()->role, ['staff', 'admin']);
+      $homeUrl     = $isStaffSide ? route('staffdashboard') : url('/patientdashboard');
+  @endphp
+
   <div class="header">
     <div class="logo-section">
-      <button class="menu-toggle" onclick="toggleSidebar()">
-          <i class="bi bi-list"></i>
-      </button>
-
-      <img src="{{ asset('images/SMHLogo.png') }}" alt="SMH Logo">
-      <span class="logo-text fw-bold">Subic Med Health</span>
+      <a href="{{ $homeUrl }}" class="logo-link" title="Back to dashboard" aria-label="Back to dashboard">
+        <img src="{{ asset('images/SMHLogo.png') }}" alt="SMH Logo">
+        <span class="logo-text fw-bold">Subic Med Health</span>
+      </a>
     </div>
 
     <div class="welcome-text d-none d-sm-block">
-        @if(auth()->user()->role == 'staff' || auth()->user()->role == 'admin')
+        @if($isStaffSide)
             Staff Dashboard 👨‍⚕️
         @else
             Patient Portal 🏥
@@ -128,31 +107,12 @@
   </div>
 
   <div class="main-content">
-    <div class="sidebar" id="sidebarMenu">
-      <h6 class="text-uppercase small fw-bold opacity-50 mb-3 px-2">Main Menu</h6>
-
-      @if(auth()->user()->role == 'staff' || auth()->user()->role == 'admin')
-        <a href="{{ route('staffdashboard') }}" class="{{ request()->routeIs('staffdashboard') ? 'active' : '' }}">
-          <i class="bi bi-speedometer2 me-2"></i> Overview
-        </a>
-      @else
-        <a href="{{ url('/patientdashboard') }}" class="{{ request()->is('patientdashboard') ? 'active' : '' }}">
-          <i class="bi bi-house-door me-2"></i> Home
-        </a>
-      @endif
-    </div>
-
     <div class="content-area" id="contentArea">
       @yield('content')
     </div>
   </div>
 
   <script>
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebarMenu');
-        sidebar.classList.toggle('show');
-    }
-
     function toggleDropdown() {
       const menu = document.getElementById('profileMenu');
       menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
@@ -162,14 +122,6 @@
       if (!event.target.closest('.profile-dropdown')) {
         const menu = document.getElementById('profileMenu');
         if (menu) menu.style.display = 'none';
-      }
-
-      const sidebar = document.getElementById('sidebarMenu');
-      if (window.innerWidth < 992 &&
-          !event.target.closest('#sidebarMenu') &&
-          !event.target.closest('.menu-toggle') &&
-          sidebar.classList.contains('show')) {
-        sidebar.classList.remove('show');
       }
     }
   </script>

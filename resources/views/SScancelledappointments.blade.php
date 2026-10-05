@@ -1,14 +1,14 @@
 @extends('layouts.masterlayout')
 
-@section('title', 'Approved Appointment Schedule')
+@section('title', 'Cancelled Appointment Requests')
 
 @section('content')
 @php
-    $appointments = $approvedAppointments;
-    $title        = 'Approved Appointment Schedule';
-    $icon         = 'bi-calendar-check';
-    $badgeClass   = 'badge-approved';
-    $emptyText    = 'No approved appointments found.';
+    $appointments = $cancelledAppointments;
+    $title        = 'Cancelled Appointment Requests';
+    $icon         = 'bi-calendar-x';
+    $badgeClass   = 'badge-cancelled';
+    $emptyText    = 'No cancelled appointments found.';
 @endphp
 <style>
     .schedule-page { padding: 28px 10px; max-width: 1100px; margin: 0 auto; }

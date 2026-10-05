@@ -230,6 +230,12 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 // for the staff to view approved schedules 
 Route::get('/staff/appointments/approved', [AppointmentController::class, 'approvedSchedule'])
     ->name('staff.appointments.approved');
+// for the staff to view cancelled requests
+Route::get('/staff/appointments/cancelled', [AppointmentController::class, 'cancelledSchedule'])
+    ->name('staff.appointments.cancelled');
+// for the staff to view rescheduled requests
+Route::get('/staff/appointments/rescheduled', [AppointmentController::class, 'rescheduledSchedule'])
+    ->name('staff.appointments.rescheduled');
 
 
 // Add Promo
