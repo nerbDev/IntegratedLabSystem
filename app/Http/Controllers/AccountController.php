@@ -57,21 +57,34 @@ class AccountController extends Controller
     // ------------------------------
     // Login
     // ------------------------------
-    public function login(Request $request)
+        public function login(Request $request)
     {
-        $credentials = $request->only('email', 'password');
+        // Errors go into a separate "login" bag so they don't mix with register errors
+        $credentials = $request->validateWithBag('login', [
+            'email'    => 'required|email',
+            'password' => 'required|string',
+        ], [
+            'email.required'    => 'Please enter your email address.',
+            'email.email'       => 'Please enter a valid email address.',
+            'password.required' => 'Please enter your password.',
+        ]);
 
         $existing = UserAccount::where('email', $credentials['email'])->first();
 
         if ($existing && is_null($existing->password)) {
-            return back()->with('error', 'This account uses Google/Facebook sign-in. Please use that button instead.');
+            return back()
+                ->withInput($request->only('email'))
+                ->with('login_error', 'This account uses Google/Facebook sign-in. Please use that button instead.');
         }
 
         if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
             return $this->redirectByRole(Auth::user());
         }
 
-        return back()->with('error', 'Invalid login credentials');
+        return back()
+            ->withInput($request->only('email'))
+            ->with('login_error', 'Incorrect email or password. Please check your details and try again.');
     }
 
     // ------------------------------
